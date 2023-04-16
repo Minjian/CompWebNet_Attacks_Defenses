@@ -1,3 +1,44 @@
-TODO: Include a stack trace from GDB of bsdtar crashing on an input found by
+Include a stack trace from GDB of bsdtar crashing on an input found by
 afl-fuzz. Briefly describe what the vulnerability is in the libarchive source
 code (2-3 sentences).
+
+After running afl-fuzz for 15 minutes, we found 3 crashes happenedin the same
+line of code (i.e. libarchive/archive_read_support_filter_compress.c:386).
+
+We can use GDB with the following commands to reproduce the crash and
+check values of related variables to understand the vulnerability:
+```
+* gdb ./install/bin/bsdtar
+* (gdb) b archive_read_support_filter_compress.c:386
+* (gdb) run -O -xf results/crashes/id\:000000\,sig\:11\,src\:000060\,time\:934788\,op\:flip1\,pos\:4
+* (gdb) p code
+* (gdb) p state->suffix[code]
+* (gdb) p state->prefix[code]
+* (gdb) p state->stackp
+```
+
+We can see the value of "code" is always 256 the "state->stackp" pointer
+will keep increasing from address "0xe611f9" to "0xe92001".
+
+The memory at address "0xe611f9" is accessible but we cannot access memory
+at address "0xe92001", hence the program would crash when it tries to dereference
+the unaccessible memory address.
+
+The stack trace from GDB of bsdtar crashing is shown below:
+```
+(gdb) bt
+#0  0x0000000000446b1a in next_code (self=self@entry=0xe310d0) at libarchive/archive_read_support_filter_compress.c:386
+#1  0x0000000000446698 in compress_filter_read (self=0xe310d0, pblock=0xe31158) at libarchive/archive_read_support_filter_compress.c:287
+#2  0x000000000043d504 in __archive_read_filter_ahead (filter=0xe310d0, min=<optimized out>, avail=<optimized out>) at libarchive/archive_read.c:1275
+#3  0x0000000000445fb4 in bzip2_reader_bid (self=self@entry=0xe14c28, filter=0x5315f0) at libarchive/archive_read_support_filter_bzip2.c:134
+#4  0x000000000043af98 in choose_filters (a=0xe14b20) at libarchive/archive_read.c:562
+#5  archive_read_open1 (_a=_a@entry=0xe14b20) at libarchive/archive_read.c:506
+#6  0x0000000000444d19 in archive_read_open_filenames (a=<optimized out>, a@entry=0xe14b20, filenames=<optimized out>, filenames@entry=0x7fffffffe0d0, 
+    block_size=<optimized out>, block_size@entry=10240) at libarchive/archive_read_open_filename.c:150
+#7  0x0000000000444b47 in archive_read_open_filename (a=0x5315f0, a@entry=0xe14b20, 
+    filename=0x7fffffffe795 "results/crashes/id:000000,sig:11,src:000060,time:934788,op:flip1,pos:4", block_size=15278080)
+    at libarchive/archive_read_open_filename.c:107
+#8  0x000000000042a734 in read_archive (bsdtar=bsdtar@entry=0x7fffffffe230, mode=mode@entry=120 'x', writer=writer@entry=0xe13620) at tar/read.c:204
+#9  0x000000000042b2c7 in tar_mode_x (bsdtar=bsdtar@entry=0x7fffffffe230) at tar/read.c:104
+#10 0x00000000004289f7 in main (argc=<optimized out>, argv=<optimized out>) at tar/bsdtar.c:804
+```

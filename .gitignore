@@ -1,2 +1,4 @@
 # ignore VM
 *-vm*
+*libarchive*
+*summary*

