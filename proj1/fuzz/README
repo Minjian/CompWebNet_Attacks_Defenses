@@ -2,7 +2,7 @@ Include a stack trace from GDB of bsdtar crashing on an input found by
 afl-fuzz. Briefly describe what the vulnerability is in the libarchive source
 code (2-3 sentences).
 
-After running afl-fuzz for 15 minutes, we found 3 crashes happenedin the same
+After running afl-fuzz for 15 minutes, we found 3 crashes happened at the same
 line of code (i.e. libarchive/archive_read_support_filter_compress.c:386).
 
 We can use GDB with the following commands to reproduce the crash and
