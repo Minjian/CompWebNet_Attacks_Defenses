@@ -1,9 +1,9 @@
-3.1 Exploit Alpha: Cookie Theft
+## 3.1 Exploit Alpha: Cookie Theft
 HTML hidden: https://www.w3schools.com/tags/att_global_hidden.asp
 URL replace: https://www.w3schools.com/jsref/met_loc_replace.asp
 
 
-3.2 Exploit Bravo: Cross-Site Request Forgery
+## 3.2 Exploit Bravo: Cross-Site Request Forgery
 By using the FireFox "inspect" feature, when we do a transfer from user1 to user2, we know the request header is
 ```
 POST /post_transfer HTTP/1.1
@@ -23,5 +23,10 @@ destination_username=user2&quantity=20
 
 Hence, we can create a XMLHttpRequest to set the request header to be a "application/x-www-form-urlencoded" form and send out "destination_username=attacker&quantity=10" as the form data. Then, we can steal 10 Bitbars from user account and deposit to the attacker account.
 
+XMLHttpRequest: https://www.w3schools.com/js/js_ajax_http.asp
 
-3.3 Exploit Charlie: Session Hijacking with Cookies
+
+## 3.3 Exploit Charlie: Session Hijacking with Cookies
+Based on the code in router.js, the app uses "session.account" to maintain user's session. In the "/post_transfer" function, we know it would check "req.session.account.bitbars" and "req.session.account.username" to validate the transfer. Hence, in this attack, we need to overwrite those 2 fields.
+
+In addition, req.session is generally serialized as JSON by the store according to http://expressjs.com/en/resources/middleware/session.html. We can JS JSON to modify those 2 fields.
