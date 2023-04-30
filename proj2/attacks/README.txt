@@ -2,4 +2,26 @@
 HTML hidden: https://www.w3schools.com/tags/att_global_hidden.asp
 URL replace: https://www.w3schools.com/jsref/met_loc_replace.asp
 
+
 3.2 Exploit Bravo: Cross-Site Request Forgery
+By using the FireFox "inspect" feature, when we do a transfer from user1 to user2, we know the request header is
+```
+POST /post_transfer HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/112.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate, br
+Content-Type: application/x-www-form-urlencoded
+......
+```
+
+and the request body is
+```
+destination_username=user2&quantity=20
+```
+
+Hence, we can create a XMLHttpRequest to set the request header to be a "application/x-www-form-urlencoded" form and send out "destination_username=attacker&quantity=10" as the form data. Then, we can steal 10 Bitbars from user account and deposit to the attacker account.
+
+
+3.3 Exploit Charlie: Session Hijacking with Cookies
