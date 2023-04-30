@@ -1,6 +1,6 @@
 ## 3.1 Exploit Alpha: Cookie Theft
-HTML hidden: https://www.w3schools.com/tags/att_global_hidden.asp
-URL replace: https://www.w3schools.com/jsref/met_loc_replace.asp
+* HTML hidden: https://www.w3schools.com/tags/att_global_hidden.asp
+* URL replace: https://www.w3schools.com/jsref/met_loc_replace.asp
 
 
 ## 3.2 Exploit Bravo: Cross-Site Request Forgery
@@ -30,3 +30,16 @@ XMLHttpRequest: https://www.w3schools.com/js/js_ajax_http.asp
 Based on the code in router.js, the app uses "session.account" to maintain user's session. In the "/post_transfer" function, we know it would check "req.session.account.bitbars" and "req.session.account.username" to validate the transfer. Hence, in this attack, we need to overwrite those 2 fields.
 
 In addition, req.session is generally serialized as JSON by the store according to http://expressjs.com/en/resources/middleware/session.html. We can JS JSON to modify those 2 fields.
+
+## 3.4 Exploit Delta: Cooking the Books with Cookies
+Based on the code in the "/post_transfer" function, the app would update the database by using "req.session.account.bitbars". Similarly to 3.3, we can overwrite the value of "req.session.account.bitbars" to forge Bitbars.
+
+As the grader will send 1 Bitbar to another user and then verify the new account contains 1 million Bitbars, we need to set the value as 1 million and 1 Bitbars.
+
+## 3.5 Exploit Echo: SQL Injection
+
+
+## 3.6 Exploit Foxtrot: Profile Worm
+
+
+## 3.7 Exploit Gamma: Password Extraction via Timing Attack
