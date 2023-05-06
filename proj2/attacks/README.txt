@@ -38,6 +38,7 @@ In addition, req.session is generally serialized as JSON by the store
 according to http://expressjs.com/en/resources/middleware/session.html.
 We can JS JSON to modify those 2 fields.
 
+
 ## 3.4 Exploit Delta: Cooking the Books with Cookies
 Based on the code in the "/post_transfer" function, the app would update the database
 by using"req.session.account.bitbars". Similarly to 3.3, we can overwrite the value
@@ -45,6 +46,7 @@ of "req.session.account.bitbars" to forge Bitbars.
 
 As the grader will send 1 Bitbar to another user and then verify the new account contains 1 million Bitbars,
 we need to set the value as 1 million and 1 Bitbars.
+
 
 ## 3.5 Exploit Echo: SQL Injection
 Based on the code in the "/post_register" and '/close' functions,
@@ -59,7 +61,31 @@ and any username that container "username" (i.e. the malicious account).
 DELETE FROM Users WHERE username == "user3" OR username LIKE "%username%";
 ```
 
+
 ## 3.6 Exploit Foxtrot: Profile Worm
+If we set a normal profile, we can see the bitbar count is controlled by the following code via Fireforx Inspector:
+```
+<div id="profile">This is User 1.</div>
+<span id="bitbar_count" class="200">
+    <script type="text/javascript">
+      var total = eval(document.getElementById('bitbar_count').className);
+      function showBitbars(bitbars) {
+        document.getElementById("bitbar_display").innerHTML = bitbars + " bitbars";
+        if (bitbars < total) {
+          setTimeout("showBitbars(" + (bitbars + 1) + ")", 20);
+        }
+      }
+      if (total > 0) showBitbars(0);  // count up to total
+    </script>
+</span>
+```
+
+In addition, by checking the "code/views/pages/profile/view.ejs" code, we can basically embed a Javascript in the result.profile field to do a post_transfer and a set_profile action so that the malicious profile would be propagated when it is viewed.
+
+We also need to set the "bitbar_count" to 10 in the profile field so that it would be fetched before the real "bitbar_count".
+
+Reference about converting special characters to HTML in Javascript: https://www.tutorialspoint.com/how-to-convert-special-characters-to-html-in-javascript
 
 
 ## 3.7 Exploit Gamma: Password Extraction via Timing Attack
+

