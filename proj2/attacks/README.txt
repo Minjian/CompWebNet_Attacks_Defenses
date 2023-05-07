@@ -80,12 +80,24 @@ If we set a normal profile, we can see the bitbar count is controlled by the fol
 </span>
 ```
 
-In addition, by checking the "code/views/pages/profile/view.ejs" code, we can basically embed a Javascript in the result.profile field to do a post_transfer and a set_profile action so that the malicious profile would be propagated when it is viewed.
+In addition, by checking the "code/views/pages/profile/view.ejs" code, we can basically embed a Javascript
+in the result.profile field to do a post_transfer and a set_profile action so that the malicious profile
+would be propagated when it is viewed.
 
-We also need to set the "bitbar_count" to 10 in the profile field so that it would be fetched before the real "bitbar_count".
+We also need to set the "bitbar_count" to 10 in the profile field
+so that it would be fetched before the real "bitbar_count".
 
-Reference about converting special characters to HTML in Javascript: https://www.tutorialspoint.com/how-to-convert-special-characters-to-html-in-javascript
+Reference about converting special characters to HTML in Javascript:
+* https://www.tutorialspoint.com/how-to-convert-special-characters-to-html-in-javascript
 
 
 ## 3.7 Exploit Gamma: Password Extraction via Timing Attack
+When looking at the code in the "/post_transfer" function, we see we have "q.replace(/script|SCRIPT|img|IMG/g, '');",
+which would make our starter code not runnable. So we need to replace "img" with "Img" and "script" with "Script".
 
+Once we make our starter code runnable, we would see the starter code would send out 7
+"GET /hello! 404 4.149 ms - 873" requests, so we just need to replace it with "/get_login" request with the 7 passwords
+in the dictionary and mark the time.
+
+After trying all passwords, we send the "correct_index" and "correct_time" to "/steal_password". Then we can know the
+password for userx is "dragon" and its time elapsed.
