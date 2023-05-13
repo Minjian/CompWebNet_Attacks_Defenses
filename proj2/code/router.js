@@ -8,15 +8,39 @@ import { generateRandomness, HMAC, KDF, checkPassword } from './utils/crypto';
 const router = express.Router();
 const dbPromise = sqlite.open('./db/database.sqlite')
 
+// References:
+// https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html
+// https://stackoverflow.com/questions/2794137/sanitizing-user-input-before-adding-it-to-the-dom-in-javascript
+function sanitized_string(input) {
+  if (typeof input !== 'string') return input;
+  const map = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#x27;',
+      "/": '&#x2F;',
+  };
+  const reg = /[&<>"'/]/ig;
+  return input.replace(reg, (match)=>(map[match]));
+}
+
+function sanitized_object(object) {
+  if (typeof object === 'undefined' || object === null) return object;
+  object.username = sanitized_string(object.username);
+  object.profile = sanitized_string(object.profile);
+  return object;
+}
+
 function render(req, res, next, page, title, errorMsg = false, result = null) {
   res.render(
     'layout/template', {
       page,
-      title,
+      title: sanitized_string(title),
       loggedIn: req.session.loggedIn,
-      account: req.session.account,
-      errorMsg,
-      result,
+      account: sanitized_object(req.session.account),
+      errorMsg: sanitized_string(errorMsg),
+      result: sanitized_object(result),
     }
   );
 }
