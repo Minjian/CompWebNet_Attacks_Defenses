@@ -25,6 +25,14 @@ the requirement.
 
 
 ## 4.3 Defense Charlie: Session Hijacking with Cookies
+References:
+* https://stackoverflow.com/questions/3240246/signed-session-cookies-a-good-idea
+
+In the Attack Charles, we replace the current cookie with a target cookie so that
+we can convince the server we are another user. We can defense this by signing the
+session based a server secret key together with user name and password. Then we check the
+session if it has the correct signature. If the session doesn't have the correct signature,
+we force to logout the session and ask users to login again.
 
 
 ## 4.4 Defense Delta: Cooking the Books with Cookies
