@@ -76,6 +76,18 @@ function is_valid_username(input) {
   return username_regex_pattern.test(input);
 }
 
+// Defense Foxtrot
+const xss_restricted_content = [
+  "<script", "</script>", // Restricting Inline and Remote Scripts
+  "eval(", // Restricting Unsafe JavaScript
+  "<form", "</form>", // Restricting Form submissions
+  "<object", "</object>", // Restricting Objects
+];
+function profile_has_dangerous_content(input) {
+  if (typeof input !== 'string') return input;
+  console.log("xss_restricted_content = " + xss_restricted_content.some(v => input.includes(v)));
+  return xss_restricted_content.some(v => input.includes(v));
+}
 
 function render(req, res, next, page, title, errorMsg = false, result = null) {
   res.render(
@@ -103,6 +115,17 @@ router.get('/', (req, res, next) => {
 router.post('/set_profile', asyncMiddleware(async (req, res, next) => {
   if(generate_session_signature(req.session) !== login_session_signature) {
     force_logout(req, res, next);
+    return;
+  }
+
+  if(profile_has_dangerous_content(req.body.new_profile)) {
+    // Could use a better way to notify users if we can modify
+    // the "proj2/code/views/pages/index.ejs" file.
+    req.session.account.profile = ('Unsaved profile due to having insecure content: '
+                                   + xss_restricted_content
+                                   + '. Please revise profile input!');
+    update_session_signature(req.session);
+    render(req, res, next, 'index', 'Bitbar Home');
     return;
   }
 

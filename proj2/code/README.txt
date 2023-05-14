@@ -65,5 +65,19 @@ change that to meet other specific requirements.
 ## 4.6 Defense Foxtrot: Profile Worm
 References:
 * https://cheatsheetseries.owasp.org/cheatsheets/Content_Security_Policy_Cheat_Sheet.html
+* https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/some
+
+If users are only allowed to set their profile in text without any HTML tag, we can simply
+sanitize the profile input like what we did in Defense Alpha. However, based on the project
+requirement, we cannot over-sanitize inputs so we didn't sanitize profile in the
+"sanitized_object" function.
+
+With such a condition, we can check if the profile has dangerous content that could cause
+XSS attacks. Based on "Content Security Policy Cheat Sheet", we use "xss_restricted_content"
+to include common tags used by XSS attacks. If the user profile contains any tag, we notify
+the user to revise the profile.
+
+As we are not allowed to modify the "views/pages/index.ejs" file, the message is implemented
+as req.session.account.profile to show users about what tags need to be avoided.
 
 ## 4.7 Defense Gamma: Password Extraction via Timing Attack
