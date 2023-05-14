@@ -8,9 +8,7 @@ import { generateRandomness, HMAC, KDF, checkPassword } from './utils/crypto';
 const router = express.Router();
 const dbPromise = sqlite.open('./db/database.sqlite')
 
-// References:
-// https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html
-// https://stackoverflow.com/questions/2794137/sanitizing-user-input-before-adding-it-to-the-dom-in-javascript
+// Defense Alpha
 function sanitized_string(input) {
   if (typeof input !== 'string') return input;
   const map = {
@@ -24,13 +22,23 @@ function sanitized_string(input) {
   const reg = /[&<>"'/]/ig;
   return input.replace(reg, (match)=>(map[match]));
 }
-
 function sanitized_object(object) {
   if (typeof object === 'undefined' || object === null) return object;
   object.username = sanitized_string(object.username);
   object.profile = sanitized_string(object.profile);
   return object;
 }
+
+// Defense Bravo
+// Change server secret key every 5 minutes
+const secret_key_timeout_ms = 300000
+var server_secret_key = generateRandomness()
+setInterval(function() {server_secret_key = generateRandomness()}, secret_key_timeout_ms);
+function generate_hmac_token(account) {
+  if (typeof account === 'undefined' || account === null) return account;
+  return HMAC(server_secret_key, account.username.concat(account.hashedPassword));
+}
+
 
 function render(req, res, next, page, title, errorMsg = false, result = null) {
   res.render(
@@ -170,7 +178,8 @@ router.get('/transfer', (req, res, next) => {
     render(req, res, next, 'login/form', 'Login', 'You must be logged in to use this feature!');
     return;
   };
-  render(req, res, next, 'transfer/form', 'Transfer Bitbars', false, {receiver:null, amount:null});
+  render(req, res, next, 'transfer/form', 'Transfer Bitbars', false,
+         {receiver:null, amount:null, hmac_token:generate_hmac_token(req.session.account)});
 });
 
 
@@ -181,7 +190,15 @@ router.post('/post_transfer', asyncMiddleware(async(req, res, next) => {
   };
 
   if(req.body.destination_username === req.session.account.username) {
-    render(req, res, next, 'transfer/form', 'Transfer Bitbars', 'You cannot send money to yourself!', {receiver:null, amount:null});
+    render(req, res, next, 'transfer/form', 'Transfer Bitbars', 'You cannot send money to yourself!',
+           {receiver:null, amount:null, hmac_token:generate_hmac_token(req.session.account)});
+    return;
+  }
+
+  if(req.body.hmac_token !== generate_hmac_token(req.session.account)) {
+    render(req, res, next, 'transfer/form', 'Transfer Bitbars',
+           'Transfer Session Expired! Please try again within '.concat(secret_key_timeout_ms/60000).concat(" minutes"),
+           {receiver:null, amount:null, hmac_token:generate_hmac_token(req.session.account)});
     return;
   }
 
@@ -191,7 +208,8 @@ router.post('/post_transfer', asyncMiddleware(async(req, res, next) => {
   if(receiver) { // if user exists
     const amount = parseInt(req.body.quantity);
     if(Number.isNaN(amount) || amount > req.session.account.bitbars || amount < 1) {
-      render(req, res, next, 'transfer/form', 'Transfer Bitbars', 'Invalid transfer amount!', {receiver:null, amount:null});
+      render(req, res, next, 'transfer/form', 'Transfer Bitbars', 'Invalid transfer amount!',
+             {receiver:null, amount:null, hmac_token:generate_hmac_token(req.session.account)});
       return;
     }
 
@@ -201,7 +219,8 @@ router.post('/post_transfer', asyncMiddleware(async(req, res, next) => {
     const receiverNewBal = receiver.bitbars + amount;
     query = `UPDATE Users SET bitbars = "${receiverNewBal}" WHERE username == "${receiver.username}";`;
     await db.exec(query);
-    render(req, res, next, 'transfer/success', 'Transfer Complete', false, {receiver, amount});
+    render(req, res, next, 'transfer/success', 'Transfer Complete', false,
+           {receiver, amount, hmac_token:generate_hmac_token(req.session.account)});
   } else { // user does not exist
     let q = req.body.destination_username;
     if (q == null) q = '';
@@ -211,7 +230,8 @@ router.post('/post_transfer', asyncMiddleware(async(req, res, next) => {
       oldQ = q;
       q = q.replace(/script|SCRIPT|img|IMG/g, '');
     }
-    render(req, res, next, 'transfer/form', 'Transfer Bitbars', `User ${q} does not exist!`, {receiver:null, amount:null});
+    render(req, res, next, 'transfer/form', 'Transfer Bitbars', `User ${q} does not exist!`,
+           {receiver:null, amount:null, hmac_token:generate_hmac_token(req.session.account)});
   }
 }));
 
