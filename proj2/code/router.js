@@ -43,14 +43,27 @@ function generate_transfer_token(account) {
 var login_session_signature = null;
 const session_server_secret_key = generateRandomness();
 function generate_session_signature(session) {
-  if (typeof session.account.username === 'undefined' || session.account.username === null) return null;
-  return HMAC(session_server_secret_key, session.account.username.concat(session.account.hashedPassword));
+  // This works for Attack Charlie but not Attack Delta.
+  // if (typeof session.account.username === 'undefined' || session.account.username === null) return null;
+  // return HMAC(session_server_secret_key, session.account.username.concat(session.account.hashedPassword));
+
+  // Defense Delta
+  let json_string = JSON.stringify(session.account);
+  if (typeof json_string === 'undefined' || json_string === "{}") {
+    return null;
+  }
+  return HMAC(session_server_secret_key, json_string);
 }
 function force_logout(req, res, next) {
   req.session.loggedIn = false;
   req.session.account = {};
   login_session_signature = null;
   render(req, res, next, 'index', 'Bitbar Home', 'Logged out due to a security reason! Please login again.');
+}
+
+// Defense Delta
+function update_session_signature(session) {
+  login_session_signature = generate_session_signature(session);
 }
 
 function render(req, res, next, page, title, errorMsg = false, result = null) {
@@ -70,6 +83,7 @@ function render(req, res, next, page, title, errorMsg = false, result = null) {
 router.get('/', (req, res, next) => {
   if(generate_session_signature(req.session) !== login_session_signature) {
     force_logout(req, res, next);
+    return;
   }
   render(req, res, next, 'index', 'Bitbar Home');
 });
@@ -78,9 +92,11 @@ router.get('/', (req, res, next) => {
 router.post('/set_profile', asyncMiddleware(async (req, res, next) => {
   if(generate_session_signature(req.session) !== login_session_signature) {
     force_logout(req, res, next);
+    return;
   }
 
   req.session.account.profile = req.body.new_profile;
+  update_session_signature(req.session);
   console.log(req.body.new_profile);
   const db = await dbPromise;
   const query = `UPDATE Users SET profile = ? WHERE username = "${req.session.account.username}";`;
@@ -104,7 +120,7 @@ router.get('/get_login', asyncMiddleware(async (req, res, next) => {
       await sleep(2000);
       req.session.loggedIn = true;
       req.session.account = result;
-      login_session_signature = generate_session_signature(req.session);
+      update_session_signature(req.session);
       render(req, res, next, 'login/success', 'Bitbar Home');
       return;
     }
@@ -142,7 +158,7 @@ router.post('/post_register', asyncMiddleware(async (req, res, next) => {
     profile: '',
     bitbars: 100,
   };
-  login_session_signature = generate_session_signature(req.session);
+  update_session_signature(req.session);
   render(req, res, next,'register/success', 'Bitbar Home');
 }));
 
@@ -155,6 +171,7 @@ router.get('/close', asyncMiddleware(async (req, res, next) => {
 
   if(generate_session_signature(req.session) !== login_session_signature) {
     force_logout(req, res, next);
+    return;
   }
 
   const db = await dbPromise;
@@ -183,6 +200,7 @@ router.get('/profile', asyncMiddleware(async (req, res, next) => {
 
   if(generate_session_signature(req.session) !== login_session_signature) {
     force_logout(req, res, next);
+    return;
   }
 
   if(req.query.username != null) { // if visitor makes a search query
@@ -214,6 +232,7 @@ router.get('/transfer', (req, res, next) => {
 
   if(generate_session_signature(req.session) !== login_session_signature) {
     force_logout(req, res, next);
+    return;
   }
 
   render(req, res, next, 'transfer/form', 'Transfer Bitbars', false,
@@ -229,6 +248,7 @@ router.post('/post_transfer', asyncMiddleware(async(req, res, next) => {
 
   if(generate_session_signature(req.session) !== login_session_signature) {
     force_logout(req, res, next);
+    return;
   }
 
   if(req.body.destination_username === req.session.account.username) {
@@ -256,6 +276,7 @@ router.post('/post_transfer', asyncMiddleware(async(req, res, next) => {
     }
 
     req.session.account.bitbars -= amount;
+    update_session_signature(req.session);
     query = `UPDATE Users SET bitbars = "${req.session.account.bitbars}" WHERE username == "${req.session.account.username}";`;
     await db.exec(query);
     const receiverNewBal = receiver.bitbars + amount;

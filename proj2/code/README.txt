@@ -36,6 +36,19 @@ we force to logout the session and ask users to login again.
 
 
 ## 4.4 Defense Delta: Cooking the Books with Cookies
+References:
+* https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify
+
+When doing this defense, Defense Charlie cannot cover Attack Delta. The reason for that
+is because we only sign the session based on the username and password. Attack Delta would
+change the "bitbars" value. Hence, we change to sign the session by using the content of the
+session.account. To do that, we take advantage of the "JSON.stringify()" function.
+
+However, as now we sign the session by using the content of the session.account, we need to
+update the session signature once users update their account content (e.g. bitbars, profile).
+
+In addition, we also need to carefully check the return value of the "JSON.stringify()" function,
+which can be a JSON string representing the given value, or undefined.
 
 
 ## 4.5 Defense Echo: SQL Injection
