@@ -56,18 +56,14 @@ References:
 * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/test
 * https://stackoverflow.com/questions/64830748/regex-for-validating-username
 
-With Defense Alpha and Defense Delta being implemented, Attack Echo is actually not working now
-because the special characters introduced by the attack would be sanitized and cause the session
-signature being different and force the malicious user logout.
-
-However, the malicious user is still stored in the database. Hence, we need additional defense
-for this. We change all SQL query to use parameterized SQL mentioned in the web attack lecture
-as well as checking if the username input complies our username pattern.
+In Defense Echo, we change all SQL query to use parameterized SQL mentioned in the
+web attack lecture as well as checking if the username input complies our username pattern.
 
 For the username regex, we take advantage of an existing example from StackOverflow. But we can
 change that to meet other specific requirements.
 
 ## 4.6 Defense Foxtrot: Profile Worm
-
+References:
+* https://cheatsheetseries.owasp.org/cheatsheets/Content_Security_Policy_Cheat_Sheet.html
 
 ## 4.7 Defense Gamma: Password Extraction via Timing Attack

@@ -25,7 +25,7 @@ function sanitized_string(input) {
 function sanitized_object(object) {
   if (typeof object === 'undefined' || object === null) return object;
   object.username = sanitized_string(object.username);
-  object.profile = sanitized_string(object.profile);
+  object.receiver = sanitized_string(object.receiver);
   return object;
 }
 
@@ -36,6 +36,7 @@ var transfer_server_secret_key = generateRandomness();
 setInterval(function() {transfer_server_secret_key = generateRandomness()}, transfer_secret_key_timeout_ms);
 function generate_transfer_token(account) {
   if (typeof account === 'undefined' || account === null) return account;
+  sanitized_object(account);
   return HMAC(transfer_server_secret_key, account.username.concat(account.hashedPassword));
 }
 
@@ -48,6 +49,7 @@ function generate_session_signature(session) {
   // return HMAC(session_server_secret_key, session.account.username.concat(session.account.hashedPassword));
 
   // Defense Delta
+  sanitized_object(session.account);
   let json_string = JSON.stringify(session.account);
   if (typeof json_string === 'undefined' || json_string === "{}") {
     return null;
