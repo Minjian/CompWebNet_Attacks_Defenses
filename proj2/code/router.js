@@ -66,6 +66,15 @@ function update_session_signature(session) {
   login_session_signature = generate_session_signature(session);
 }
 
+// Defense Echo
+const username_regex_pattern = new RegExp('^(?=.*[A-Za-z0-9]).{3,30}$');
+function is_valid_username(input) {
+  console.log("User Name: " + input);
+  console.log("Regex Test Result: " + username_regex_pattern.test(input));
+  return username_regex_pattern.test(input);
+}
+
+
 function render(req, res, next, page, title, errorMsg = false, result = null) {
   res.render(
     'layout/template', {
@@ -99,8 +108,8 @@ router.post('/set_profile', asyncMiddleware(async (req, res, next) => {
   update_session_signature(req.session);
   console.log(req.body.new_profile);
   const db = await dbPromise;
-  const query = `UPDATE Users SET profile = ? WHERE username = "${req.session.account.username}";`;
-  const result = await db.run(query, req.body.new_profile);
+  const query = `UPDATE Users SET profile = ? WHERE username = ?;`;
+  const result = await db.run(query, [req.body.new_profile, req.session.account.username]);
   render(req, res, next, 'index', 'Bitbar Home');
 
 }));
@@ -112,9 +121,14 @@ router.get('/login', (req, res, next) => {
 
 
 router.get('/get_login', asyncMiddleware(async (req, res, next) => {
+  if (!is_valid_username(req.query.username)) {
+    render(req, res, next, 'login/form', 'Login', 'Username is not valid!');
+    return;
+  }
+
   const db = await dbPromise;
-  const query = `SELECT * FROM Users WHERE username == "${req.query.username}";`;
-  const result = await db.get(query);
+  const query = `SELECT * FROM Users WHERE username == ?;`;
+  const result = await db.get(query, [req.query.username]);
   if(result) { // if this username actually exists
     if(checkPassword(req.query.password, result)) { // if password is valid
       await sleep(2000);
@@ -135,9 +149,14 @@ router.get('/register', (req, res, next) => {
 
 
 router.post('/post_register', asyncMiddleware(async (req, res, next) => {
+  if (!is_valid_username(req.body.username)) {
+    render(req, res, next, 'register/form', 'Register', 'Username is not valid!');
+    return;
+  }
+
   const db = await dbPromise;
-  let query = `SELECT * FROM Users WHERE username == "${req.body.username}";`;
-  let result = await db.get(query);
+  let query = `SELECT * FROM Users WHERE username == ?;`;
+  let result = await db.get(query, [req.body.username]);
   if(result) { // query returns results
     if(result.username === req.body.username) { // if username exists
       render(req, res, next, 'register/form', 'Register', 'This username already exists!');
@@ -175,8 +194,8 @@ router.get('/close', asyncMiddleware(async (req, res, next) => {
   }
 
   const db = await dbPromise;
-  const query = `DELETE FROM Users WHERE username == "${req.session.account.username}";`;
-  await db.get(query);
+  const query = `DELETE FROM Users WHERE username == ?;`;
+  await db.get(query, [req.session.account.username]);
   req.session.loggedIn = false;
   req.session.account = {};
   login_session_signature = null;
@@ -204,11 +223,16 @@ router.get('/profile', asyncMiddleware(async (req, res, next) => {
   }
 
   if(req.query.username != null) { // if visitor makes a search query
+    if (!is_valid_username(req.query.username)) {
+      render(req, res, next, 'profile/view', 'View Profile', `Username is not valid!`, req.session.account);
+      return;
+    }
+
     const db = await dbPromise;
-    const query = `SELECT * FROM Users WHERE username == "${req.query.username}";`;
+    const query = `SELECT * FROM Users WHERE username == ?;`;
     let result;
     try {
-      result = await db.get(query);
+      result = await db.get(query, [req.query.username]);
     } catch(err) {
       result = false;
     }
@@ -264,9 +288,15 @@ router.post('/post_transfer', asyncMiddleware(async(req, res, next) => {
     return;
   }
 
+  if (!is_valid_username(req.body.destination_username)) {
+    render(req, res, next, 'transfer/form', 'Transfer Bitbars', 'Username is not valid!',
+           {receiver:null, amount:null, transfer_token:generate_transfer_token(req.session.account)});
+    return;
+  }
+
   const db = await dbPromise;
-  let query = `SELECT * FROM Users WHERE username == "${req.body.destination_username}";`;
-  const receiver = await db.get(query);
+  let query = `SELECT * FROM Users WHERE username == ?;`;
+  const receiver = await db.get(query, [req.body.destination_username]);
   if(receiver) { // if user exists
     const amount = parseInt(req.body.quantity);
     if(Number.isNaN(amount) || amount > req.session.account.bitbars || amount < 1) {
@@ -277,11 +307,11 @@ router.post('/post_transfer', asyncMiddleware(async(req, res, next) => {
 
     req.session.account.bitbars -= amount;
     update_session_signature(req.session);
-    query = `UPDATE Users SET bitbars = "${req.session.account.bitbars}" WHERE username == "${req.session.account.username}";`;
-    await db.exec(query);
+    query = `UPDATE Users SET bitbars = ? WHERE username == ?;`;
+    await db.exec(query, [req.session.account.bitbars, req.session.account.username]);
     const receiverNewBal = receiver.bitbars + amount;
-    query = `UPDATE Users SET bitbars = "${receiverNewBal}" WHERE username == "${receiver.username}";`;
-    await db.exec(query);
+    query = `UPDATE Users SET bitbars = ? WHERE username == ?;`;
+    await db.exec(query, [receiverNewBal, receiver.username]);
     render(req, res, next, 'transfer/success', 'Transfer Complete', false,
            {receiver, amount, transfer_token:generate_transfer_token(req.session.account)});
   } else { // user does not exist
