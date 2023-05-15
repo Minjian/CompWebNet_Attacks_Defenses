@@ -81,3 +81,5 @@ As we are not allowed to modify the "views/pages/index.ejs" file, the message is
 as req.session.account.profile to show users about what tags need to be avoided.
 
 ## 4.7 Defense Gamma: Password Extraction via Timing Attack
+With Defense Echo being implemented, we would validate username input now. Hence, the request
+of Attack Gamma won't be processed and we prevent such a timing attack.

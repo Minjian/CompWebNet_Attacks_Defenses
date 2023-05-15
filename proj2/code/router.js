@@ -68,7 +68,7 @@ function update_session_signature(session) {
   login_session_signature = generate_session_signature(session);
 }
 
-// Defense Echo
+// Defense Echo & Defense Gamma
 const username_regex_pattern = new RegExp('^(?=.*[A-Za-z0-9]).{3,30}$');
 function is_valid_username(input) {
   console.log("User Name: " + input);
