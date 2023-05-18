@@ -83,3 +83,8 @@ as req.session.account.profile to show users about what tags need to be avoided.
 ## 4.7 Defense Gamma: Password Extraction via Timing Attack
 With Defense Echo being implemented, we would validate username input now. Hence, the request
 of Attack Gamma won't be processed and we prevent such a timing attack.
+
+In addition, we add another defense for timing attack. As Attack Gamma guesses the password
+based on the login time. We can make the login time similar for both correct password and
+incorrect password. We added another "sleep(2000)" if the password is incorrect. In this case,
+attackers would see a similar timing and cannot use the timing info for password extraction.

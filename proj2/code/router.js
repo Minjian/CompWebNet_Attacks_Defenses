@@ -162,6 +162,9 @@ router.get('/get_login', asyncMiddleware(async (req, res, next) => {
       update_session_signature(req.session);
       render(req, res, next, 'login/success', 'Bitbar Home');
       return;
+    } else {
+      // Defense Gamma
+      await sleep(2000);
     }
   }
   render(req, res, next, 'login/form', 'Login', 'This username and password combination does not exist!');
