@@ -1,0 +1,147 @@
+> sudo nmap -v -sS -A -T4 -p- scanme.nmap.org
+Starting Nmap 7.94 ( https://nmap.org ) at 2023-05-28 11:56 EDT
+NSE: Loaded 156 scripts for scanning.
+NSE: Script Pre-scanning.
+Initiating NSE at 11:56
+Completed NSE at 11:56, 0.00s elapsed
+Initiating NSE at 11:56
+Completed NSE at 11:56, 0.00s elapsed
+Initiating NSE at 11:56
+Completed NSE at 11:56, 0.00s elapsed
+Initiating Ping Scan at 11:56
+Scanning scanme.nmap.org (45.33.32.156) [4 ports]
+Completed Ping Scan at 11:56, 0.10s elapsed (1 total hosts)
+Initiating Parallel DNS resolution of 1 host. at 11:56
+Completed Parallel DNS resolution of 1 host. at 11:56, 0.09s elapsed
+Initiating SYN Stealth Scan at 11:56
+Scanning scanme.nmap.org (45.33.32.156) [65535 ports]
+Discovered open port 22/tcp on 45.33.32.156
+Discovered open port 80/tcp on 45.33.32.156
+SYN Stealth Scan Timing: About 13.29% done; ETC: 12:00 (0:03:22 remaining)
+SYN Stealth Scan Timing: About 20.14% done; ETC: 12:01 (0:04:02 remaining)
+SYN Stealth Scan Timing: About 31.33% done; ETC: 12:01 (0:03:19 remaining)
+Discovered open port 9929/tcp on 45.33.32.156
+SYN Stealth Scan Timing: About 41.32% done; ETC: 12:01 (0:03:02 remaining)
+SYN Stealth Scan Timing: About 49.97% done; ETC: 12:01 (0:02:38 remaining)
+SYN Stealth Scan Timing: About 58.20% done; ETC: 12:01 (0:02:15 remaining)
+SYN Stealth Scan Timing: About 67.61% done; ETC: 12:01 (0:01:44 remaining)
+SYN Stealth Scan Timing: About 74.46% done; ETC: 12:02 (0:01:25 remaining)
+Discovered open port 31337/tcp on 45.33.32.156
+SYN Stealth Scan Timing: About 86.67% done; ETC: 12:01 (0:00:43 remaining)
+Completed SYN Stealth Scan at 12:01, 328.39s elapsed (65535 total ports)
+Initiating Service scan at 12:02
+Scanning 4 services on scanme.nmap.org (45.33.32.156)
+Completed Service scan at 12:02, 16.09s elapsed (4 services on 1 host)
+Initiating OS detection (try #1) against scanme.nmap.org (45.33.32.156)
+Retrying OS detection (try #2) against scanme.nmap.org (45.33.32.156)
+NSE: Script scanning 45.33.32.156.
+Initiating NSE at 12:02
+Completed NSE at 12:02, 21.00s elapsed
+Initiating NSE at 12:02
+Completed NSE at 12:02, 2.01s elapsed
+Initiating NSE at 12:02
+Completed NSE at 12:02, 0.00s elapsed
+Nmap scan report for scanme.nmap.org (45.33.32.156)
+Host is up (0.093s latency).
+Not shown: 64513 closed tcp ports (reset), 1018 filtered tcp ports (no-response)
+PORT      STATE SERVICE    VERSION
+22/tcp    open  ssh        OpenSSH 6.6.1p1 Ubuntu 2ubuntu2.13 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   1024 ac:00:a0:1a:82:ff:cc:55:99:dc:67:2b:34:97:6b:75 (DSA)
+|   2048 20:3d:2d:44:62:2a:b0:5a:9d:b5:b3:05:14:c2:a6:b2 (RSA)
+|   256 96:02:bb:5e:57:54:1c:4e:45:2f:56:4c:4a:24:b2:57 (ECDSA)
+|_  256 33:fa:91:0f:e0:e1:7b:1f:6d:05:a2:b0:f1:54:41:56 (ED25519)
+80/tcp    open  http?
+9929/tcp  open  nping-echo Nping echo
+31337/tcp open  tcpwrapped
+Device type: general purpose|storage-misc
+Running (JUST GUESSING): Linux 2.6.X|3.X|4.X (85%), Synology DiskStation Manager 5.X (85%)
+OS CPE: cpe:/o:linux:linux_kernel:2.6.32 cpe:/o:linux:linux_kernel:3.4 cpe:/o:linux:linux_kernel:4.2 cpe:/o:linux:linux_kernel cpe:/a:synology:diskstation_manager:5.1
+Aggressive OS guesses: Linux 2.6.32 (85%), Linux 3.4 (85%), Linux 3.5 (85%), Linux 4.2 (85%), Linux 4.4 (85%), Synology DiskStation Manager 5.1 (85%)
+No exact OS matches for host (test conditions non-ideal).
+Uptime guess: 28.646 days (since Sat Apr 29 20:32:01 2023)
+Network Distance: 12 hops
+TCP Sequence Prediction: Difficulty=263 (Good luck!)
+IP ID Sequence Generation: All zeros
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT      ADDRESS
+1   93.08 ms scanme.nmap.org (45.33.32.156)
+
+NSE: Script Post-scanning.
+Initiating NSE at 12:02
+Completed NSE at 12:02, 0.00s elapsed
+Initiating NSE at 12:02
+Completed NSE at 12:02, 0.00s elapsed
+Initiating NSE at 12:02
+Completed NSE at 12:02, 0.00s elapsed
+Read data files from: /usr/local/bin/../share/nmap
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 374.28 seconds
+           Raw packets sent: 71729 (3.158MB) | Rcvd: 66741 (2.678MB)
+
+## ===========================================================================
+
+> nmap -v -A scanme.nmap.org
+Starting Nmap 7.94 ( https://nmap.org ) at 2023-05-28 12:25 EDT
+NSE: Loaded 156 scripts for scanning.
+NSE: Script Pre-scanning.
+Initiating NSE at 12:25
+Completed NSE at 12:25, 0.00s elapsed
+Initiating NSE at 12:25
+Completed NSE at 12:25, 0.00s elapsed
+Initiating NSE at 12:25
+Completed NSE at 12:25, 0.00s elapsed
+Initiating Ping Scan at 12:25
+Scanning scanme.nmap.org (45.33.32.156) [2 ports]
+Completed Ping Scan at 12:25, 0.10s elapsed (1 total hosts)
+Initiating Parallel DNS resolution of 1 host. at 12:25
+Completed Parallel DNS resolution of 1 host. at 12:25, 0.09s elapsed
+Initiating Connect Scan at 12:25
+Scanning scanme.nmap.org (45.33.32.156) [1000 ports]
+Discovered open port 80/tcp on 45.33.32.156
+Discovered open port 22/tcp on 45.33.32.156
+Discovered open port 9929/tcp on 45.33.32.156
+Discovered open port 31337/tcp on 45.33.32.156
+Completed Connect Scan at 12:26, 39.58s elapsed (1000 total ports)
+Initiating Service scan at 12:26
+Scanning 4 services on scanme.nmap.org (45.33.32.156)
+Completed Service scan at 12:26, 6.20s elapsed (4 services on 1 host)
+NSE: Script scanning 45.33.32.156.
+Initiating NSE at 12:26
+Completed NSE at 12:26, 5.21s elapsed
+Initiating NSE at 12:26
+Completed NSE at 12:26, 0.38s elapsed
+Initiating NSE at 12:26
+Completed NSE at 12:26, 0.00s elapsed
+Nmap scan report for scanme.nmap.org (45.33.32.156)
+Host is up (0.094s latency).
+Not shown: 847 closed tcp ports (conn-refused), 149 filtered tcp ports (no-response)
+PORT      STATE SERVICE    VERSION
+22/tcp    open  ssh        OpenSSH 6.6.1p1 Ubuntu 2ubuntu2.13 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   1024 ac:00:a0:1a:82:ff:cc:55:99:dc:67:2b:34:97:6b:75 (DSA)
+|   2048 20:3d:2d:44:62:2a:b0:5a:9d:b5:b3:05:14:c2:a6:b2 (RSA)
+|   256 96:02:bb:5e:57:54:1c:4e:45:2f:56:4c:4a:24:b2:57 (ECDSA)
+|_  256 33:fa:91:0f:e0:e1:7b:1f:6d:05:a2:b0:f1:54:41:56 (ED25519)
+80/tcp    open  http       Apache httpd 2.4.7 ((Ubuntu))
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-title: Go ahead and ScanMe!
+|_http-server-header: Apache/2.4.7 (Ubuntu)
+|_http-favicon: Nmap Project
+9929/tcp  open  nping-echo Nping echo
+31337/tcp open  tcpwrapped
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+NSE: Script Post-scanning.
+Initiating NSE at 12:26
+Completed NSE at 12:26, 0.00s elapsed
+Initiating NSE at 12:26
+Completed NSE at 12:26, 0.00s elapsed
+Initiating NSE at 12:26
+Completed NSE at 12:26, 0.00s elapsed
+Read data files from: /usr/local/bin/../share/nmap
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 51.94 seconds
