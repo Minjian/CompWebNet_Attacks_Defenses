@@ -1,4 +1,4 @@
 1. RST
 2. NIL
-3. REQUESTS=<HTTP OPTIONS>, <HTTP POST>, <HTTP PROPFIND>
-4. Acknowledgement Number, Window, Options
+3. REQUESTS=<OPTIONS>, <POST>, <PROPFIND>
+4. <Acknowledgement Number>, <Window>, <Options>

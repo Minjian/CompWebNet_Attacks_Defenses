@@ -23,90 +23,128 @@
 package main
 
 import (
-	// You may use any packages in gopacket or the Go standard library,
-	// but we think these should be sufficient. You MAY NOT use any
-	// third party libraries. The autograder will not build with these.
+    // You may use any packages in gopacket or the Go standard library,
+    // but we think these should be sufficient. You MAY NOT use any
+    // third party libraries. The autograder will not build with these.
 
-	"fmt"
-	"os"
+    "fmt"
+    "os"
+    "net"
 
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
-	"github.com/google/gopacket/pcap"
+    "github.com/google/gopacket"
+    "github.com/google/gopacket/layers"
+    "github.com/google/gopacket/pcap"
 )
 
 func main() {
-	if len(os.Args) != 2 {
-		panic("Invalid command-line arguments")
-	}
-	pcapFile := os.Args[1]
+    if len(os.Args) != 2 {
+        panic("Invalid command-line arguments")
+    }
+    pcapFile := os.Args[1]
 
-	// Attempt to open file
-	if handle, err := pcap.OpenOffline(pcapFile); err != nil {
-		panic(err)
-	} else {
-		packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
-		// Here, we provide some data structures that you may find useful.
-		// Maps in Go are very similar to Python's dictionaries.
-		// The Go syntax to declare an empty map is map[KEY_TYPE]VALUE_TYPE{}.
-		// Key = IP address, value = array of 2 ints representing [syn, synack] counts
-		addresses := map[string][2]int{}
-		// Key = IP address, value = map (this is a nested map!) whose key = MAC address,
-		// and value = int. You can use this to track the number of requests and replies
-		// for pairs of (IP address, MAC address).
-		arpRequests := map[string]map[string]int{}
-		// Key = MAC address, value = int. Use this to store offending MAC addresses,
-		// as well as how many times each one sent an unsolicited reply.
-		arpMac := map[string]int{}
+    // Attempt to open file
+    if handle, err := pcap.OpenOffline(pcapFile); err != nil {
+        panic(err)
+    } else {
+        packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
+        // Here, we provide some data structures that you may find useful.
+        // Maps in Go are very similar to Python's dictionaries.
+        // The Go syntax to declare an empty map is map[KEY_TYPE]VALUE_TYPE{}.
+        // Key = IP address, value = array of 2 ints representing [syn, synack] counts
+        addresses := map[string][2]int{}
+        // Key = IP address, value = map (this is a nested map!) whose key = MAC address,
+        // and value = int. You can use this to track the number of requests and replies
+        // for pairs of (IP address, MAC address).
+        arpRequests := map[string]map[string]int{}
+        // Key = MAC address, value = int. Use this to store offending MAC addresses,
+        // as well as how many times each one sent an unsolicited reply.
+        arpMac := map[string]int{}
 
-		// Loop through packets in file
-		// Recommendation: Encapsulate packet handling and/or output in separate functions!
-		for packet := range packetSource.Packets() {
-			tcpLayer := packet.Layer(layers.LayerTypeTCP)
-			ipLayer := packet.Layer(layers.LayerTypeIPv4)
-			etherLayer := packet.Layer(layers.LayerTypeEthernet)
-			arpLayer := packet.Layer(layers.LayerTypeARP)
+        // Loop through packets in file
+        // Recommendation: Encapsulate packet handling and/or output in separate functions!
+        for packet := range packetSource.Packets() {
+            tcpLayer := packet.Layer(layers.LayerTypeTCP)
+            ipLayer := packet.Layer(layers.LayerTypeIPv4)
+            etherLayer := packet.Layer(layers.LayerTypeEthernet)
+            arpLayer := packet.Layer(layers.LayerTypeARP)
 
-			if tcpLayer != nil && ipLayer != nil && etherLayer != nil {
+            if tcpLayer != nil && ipLayer != nil && etherLayer != nil {
+                /*
+                   Obtain the source and destination IP addresses using
+                   ipLayer, and the TCP flags using tcpLayer. Update the variable
+                   addresses accordingly. You will want to have an if-statement
+                   that branches on SYN vs. SYN/ACK. Note than a SYN packet has
+                   the SYN flag set to true, AND the ACK flag set to false!
+                */
+                tcp_packet, _ := tcpLayer.(*layers.TCP)
+                ip_packet, _ := ipLayer.(*layers.IPv4)
+                if (tcp_packet.SYN == true && tcp_packet.ACK == false) {
+                    src_ip := net.IP(ip_packet.SrcIP).String()
+                    count_array := addresses[src_ip]
+                    count_array[0] += 1
+                    addresses[src_ip] = count_array
+                }
 
-				/*
-				   TODO: obtain the source and destination IP addresses using
-				   ipLayer, and the TCP flags using tcpLayer. Update the variable
-				   addresses accordingly. You will want to have an if-statement
-				   that branches on SYN vs. SYN/ACK. Note than a SYN packet has
-				   the SYN flag set to true, AND the ACK flag set to false!
-				*/
+                if (tcp_packet.SYN == true && tcp_packet.ACK == true) {
+                    dst_ip := net.IP(ip_packet.DstIP).String()
+                    count_array := addresses[dst_ip]
+                    count_array[1] += 1
+                    addresses[dst_ip] = count_array
+                }
 
-			} else if arpLayer != nil {
+            } else if arpLayer != nil {
+                /*
+                   Use the arp variable to get (IP address, MAC address)
+                   pairs for the source and destination. Fill in the if-else if
+                   statement below as well. arp.Operation has a value of 1 if the
+                   ARP packet is a request, and 2 if it is a reply. Update the
+                   variable arpRequests accordingly. If you spot an unsolicited
+                   reply, update arpMac.
+                */
+                arp, _ := arpLayer.(*layers.ARP)
+                // Parse arp to get additional info
+                if arp.Operation == 1 {
+                    // Write code for handling an ARP request
+                    req_ip := net.IP(arp.DstProtAddress).String()
+                    req_src_hw_addr := net.HardwareAddr(arp.SourceHwAddress).String()
+                    _, match := arpRequests[req_ip]
+                    if (!match) {
+                        arpRequests[req_ip] = make(map[string]int)
+                        arpRequests[req_ip][req_src_hw_addr] = 1
+                    } else {
+                        arpRequests[req_ip][req_src_hw_addr] += 1
+                    }
+                } else if arp.Operation == 2 {
+                    // Write code for handling an ARP reply
+                    rep_ip := net.IP(arp.SourceProtAddress).String()
+                    rep_dst_hw_addr := net.HardwareAddr(arp.DstHwAddress).String()
+                    value, match := arpRequests[rep_ip]
+                    if (match && arpRequests[rep_ip][rep_dst_hw_addr] > 0) {
+                        value[rep_dst_hw_addr] -= 1
+                        arpRequests[rep_ip][rep_dst_hw_addr] = value[rep_dst_hw_addr]
+                    } else {
+                        src_hw_addr := net.HardwareAddr(arp.SourceHwAddress).String()
+                        arpMac[src_hw_addr] += 1
+                    }
+                }
+            }
+        }
+        fmt.Println("Unauthorized SYN scanners:")
+        for ip, addr := range addresses {
+            // Print syn scanners
+            if ((float32(addr[0]) / float32(addr[1]) > 3) && (addr[0] > 5)) {
+                fmt.Printf("%s\n", ip)
+            }
+        }
 
-				/*
-				   TODO: Use the arp variable to get (IP address, MAC address)
-				   pairs for the source and destination. Fill in the if-else if
-				   statement below as well. arp.Operation has a value of 1 if the
-				   ARP packet is a request, and 2 if it is a reply. Update the
-				   variable arpRequests accordingly. If you spot an unsolicited
-				   reply, update arpMac.
-				*/
-
-				arp, _ := arpLayer.(*layers.ARP)
-				// Parse arp to get additional info
-				if arp.Operation == 1 {
-					// Write code for handling an ARP request
-				} else if arp.Operation == 2 {
-					// Write code for handling an ARP reply
-				}
-			}
-		}
-		fmt.Println("Unauthorized SYN scanners:")
-		for ip, addr := range addresses {
-			// TODO: Print syn scanners
-		}
-
-		fmt.Println("Unauthorized ARP spoofers:")
-		for mac, count := range arpMac {
-			// TODO: Print arp spoofers
-		}
-	}
+        fmt.Println("Unauthorized ARP spoofers:")
+        for mac, count := range arpMac {
+            // Print arp spoofers
+            if count > 5 {
+                fmt.Printf("%s\n", mac)
+            }
+        }
+    }
 }
 
 /*
